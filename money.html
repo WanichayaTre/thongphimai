@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบฟอร์มเบิกเงิน</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <head>
+        <link rel="stylesheet" href="money.css">
+    </head>
+    
+
+</head>
+
+<body>
+    <div class="container">
+        <button class="back-button" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i> ย้อนกลับ
+        </button>
+
+        <h1>แบบฟอร์มเบิกเงิน</h1>
+
+        <div class="success-message" id="successMessage">
+            <i class="fas fa-check-circle"></i> บันทึกรายการเบิกเงินเรียบร้อยแล้ว!
+        </div>
+
+        <div class="form-group">
+            <label for="name">ชื่อผู้เบิก</label>
+            <div class="input-with-icon">
+                <i class="fas fa-user"></i>
+                <input type="text" id="name" placeholder="กรอกชื่อผู้เบิกเงิน">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="reimbursementDate">วันที่เบิก</label>
+            <div class="input-with-icon">
+                <i class="fas fa-calendar-alt"></i>
+                <input type="date" id="reimbursementDate">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="reimbursementDetails">รายละเอียด</label>
+            <div class="input-with-icon">
+                <i class="fas fa-info-circle"></i>
+                <input type="text" id="reimbursementDetails" placeholder="กรอกรายละเอียดการเบิก">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="reimbursementAmount">จำนวนเงินเบิก (บาท)</label>
+            <div class="input-with-icon">
+                <i class="fas fa-money-bill-wave"></i>
+                <input type="number" id="reimbursementAmount" placeholder="กรอกจำนวนเงิน" min="0" step="0.01">
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button onclick="saveReimbursement()">
+                <i class="fas fa-save"></i> บันทึกรายการเบิกเงิน
+            </button>
+        </div>
+
+        <div class="record-list-container">
+            <div class="record-list-header">
+                <div class="record-list-title">
+                    <i class="fas fa-history"></i> รายการเบิกเงินล่าสุด
+                </div>
+            </div>
+            <ul class="record-list" id="recordList">
+                <li class="no-records" id="noRecords">
+                    <i class="fas fa-inbox"></i>
+                    ยังไม่มีรายการเบิกเงิน
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            updateRecordList();
+            document.getElementById("reimbursementDate").value = new Date().toISOString().split('T')[0];
+        });
+
+        function goBack() {
+            window.location.href = "work.html";
+        }
+
+        function saveReimbursement() {
+            const name = document.getElementById("name").value;
+            const date = document.getElementById("reimbursementDate").value;
+            const reason = document.getElementById("reimbursementDetails").value;
+            const amount = document.getElementById("reimbursementAmount").value;
+
+            if (name && date && reason && amount > 0) {
+                fetch("http://localhost:3001/withdraw", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, amount, reason, date })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("successMessage").style.display = "block";
+                    setTimeout(() => {
+                        document.getElementById("successMessage").style.display = "none";
+                    }, 3000);
+
+                    document.getElementById("name").value = "";
+                    document.getElementById("reimbursementDetails").value = "";
+                    document.getElementById("reimbursementAmount").value = "";
+                    updateRecordList();
+                })
+                .catch(error => alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล"));
+            } else {
+                alert("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
+            }
+        }
+
+        function updateRecordList() {
+            fetch("http://localhost:3001/withdrawals")
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById("recordList");
+                    list.innerHTML = "";
+                    
+                    if (data.length > 0) {
+                        data.forEach(record => {
+                            const listItem = document.createElement("li");
+                            listItem.innerHTML = `
+                                <div class="record-header">
+                                    <strong>${record.name}</strong>
+                                    <span class="record-amount">฿${parseFloat(record.amount).toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <div class="record-date"><i class="fas fa-calendar-day"></i> ${record.date}</div>
+                                <div class="record-details">${record.reason}</div>
+                            `;
+                            list.appendChild(listItem);
+                        });
+                    } else {
+                        list.innerHTML = `
+                            <li class="no-records" id="noRecords">
+                                <i class="fas fa-inbox"></i>
+                                ยังไม่มีรายการเบิกเงิน
+                            </li>
+                        `;
+                    }
+                })
+                .catch(error => console.error("Error fetching records:", error));
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const nameInput = document.getElementById("name");
+            let employees = JSON.parse(localStorage.getItem("employeeNames")) || [];
+
+            function showSuggestions() {
+                let value = nameInput.value.trim().toLowerCase();
+                let datalist = document.getElementById("employeeList");
+
+                if (!datalist) {
+                    datalist = document.createElement("datalist");
+                    datalist.id = "employeeList";
+                    document.body.appendChild(datalist);
+                    nameInput.setAttribute("list", "employeeList");
+                }
+
+                datalist.innerHTML = "";
+                employees
+                    .filter(name => name.toLowerCase().includes(value))
+                    .forEach(name => {
+                        let option = document.createElement("option");
+                        option.value = name;
+                        datalist.appendChild(option);
+                    });
+            }
+
+            nameInput.addEventListener("input", showSuggestions);
+
+            nameInput.addEventListener("change", function () {
+                let name = nameInput.value.trim();
+                if (name && !employees.includes(name)) {
+                    employees.push(name);
+                    localStorage.setItem("employeeNames", JSON.stringify(employees));
+                }
+            });
+        });
+
+    </script>
+</body>
+
+
+</html>

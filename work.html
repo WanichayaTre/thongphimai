@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คำนวณค่าแรง | Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="work.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <i class="fas fa-briefcase"></i>
+                <h2>คำนวณค่าแรง</h2>
+            </div>
+            <ul class="menu">
+                <li><a href="#"><i class="fas fa-calculator"></i> คำนวนค่าแรง</a></li>
+                <li><a href="money.html"><i class="fas fa-save"></i> บันทึกเงินเบิก</a></li>
+                <li><a href="history.html"><i class="fas fa-history"></i> ประวัติการเบิก</a></li>
+            </ul>
+        </div>
+
+        <!-- Main content -->
+        <div class="main-content">
+            <div class="top-bar">
+                <div class="page-title">
+                    <h1>คำนวณค่าแรง</h1>
+                </div>
+            </div>
+
+            <!-- Calculate Wage Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">กรอกข้อมูลเพื่อคำนวณค่าแรง</div>
+                </div>
+                <div class="form-layout">
+                    <div class="form-group">
+                        <label for="name">ชื่อพนักงาน</label>
+                        <input type="text" id="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="daysWorked">จำนวนวันที่ทำงาน</label>
+                        <input type="number" id="daysWorked">
+                    </div>
+                    <div class="form-group">
+                        <label for="dailyWage">อัตราค่าจ้างต่อวัน</label>
+                        <input type="number" id="dailyWage" onchange="updateHourlyWage()">
+                    </div>
+                    <div class="form-group">
+                        <label for="otHours">จำนวนชั่วโมง OT</label>
+                        <input type="number" id="otHours">
+                    </div>
+                    <div class="form-group">
+                        <label for="otRate">อัตราค่าจ้าง OT ต่อชั่วโมง</label>
+                        <input type="number" id="otRate">
+                    </div>
+                    <div class="form-group">
+                        <label for="reimbursementAmount">จำนวนเงินเบิก</label>
+                        <input type="number" id="reimbursementAmount" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="startDate">วันที่เริ่มต้น</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">วันที่สิ้นสุด</label>
+                        <input type="date" id="endDate">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="calculate()">คำนวณ</button>
+                    <button class="secondary" onclick="showReimbursementHistory()">ประวัติการเบิก</button>
+                </div>
+            </div>
+
+            <!-- Result Panel -->
+            <div class="panel result-panel hidden" id="resultPanel">
+                <div class="panel-header">
+                    <div class="panel-title">สรุปข้อมูลการจ่ายค่าแรง</div>
+                </div>
+                <div class="result-items">
+                    <div class="result-item">
+                        <div class="result-label">ค่าจ้าง</div>
+                        <div class="result-value" id="totalWages">฿0</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">ค่า OT</div>
+                        <div class="result-value" id="otPay">฿0</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">ค่าจ้าง + OT</div>
+                        <div class="result-value" id="totalWithOT">฿0</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">เงินเบิก</div>
+                        <div class="result-value" id="reimbursementAmountResult">฿0</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">ยอดเงินสุทธิ</div>
+                        <div class="result-value" id="netPay">฿0</div>
+                    </div>
+                </div>
+
+                <!-- รายละเอียดการเบิกเงิน -->
+                <div class="panel-header mt-4">
+                    <div class="panel-title">รายละเอียดการเบิกเงิน</div>
+                </div>
+                <div id="withdrawalDetailsContainer" class="mt-2">
+                    <!-- รายละเอียดการเบิกเงินจะแสดงที่นี่ -->
+                    <p id="noWithdrawalsMessage" class="text-center">ไม่มีข้อมูลการเบิกเงิน</p>
+                    <ul id="withdrawalDetailsList" class="withdrawal-details-list">
+                        <!-- รายการเบิกเงินจะแสดงที่นี่ -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Reimbursement History Panel -->
+            <div class="panel hidden" id="reimbursementHistoryPanel">
+                <div class="panel-header">
+                    <div class="panel-title">ประวัติการเบิก</div>
+                </div>
+                <ul class="reimbursement-list">
+                    <!-- Reimbursement items will appear here dynamically -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let reimbursementHistory = [
+            { date: '2025-03-01', amount: 500, remark: 'ค่าเดินทาง' },
+            { date: '2025-03-03', amount: 300, remark: 'ค่าอาหาร' }
+        ];
+
+        // เก็บข้อมูลการเบิกเงินที่ดึงมาจาก API
+        let withdrawalData = [];
+
+        function updateHourlyWage() {
+            const dailyWage = parseFloat(document.getElementById("dailyWage").value) || 0;
+            const hourlyWage = dailyWage / 8;
+            document.getElementById("otRate").value = hourlyWage;
+        }
+
+        async function saveCalculation(data) {
+            try {
+                const response = await fetch("http://localhost:3001/api/saveCalculation", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert("บันทึกข้อมูลสำเร็จ");
+                } else {
+                    alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+                }
+            } catch (error) {
+                console.error("เกิดข้อผิดพลาด:", error);
+                alert("ไม่สามารถบันทึกข้อมูลได้");
+            }
+        }
+
+        function calculate() {
+            const name = document.getElementById("name").value.trim();
+            const daysWorked = parseFloat(document.getElementById("daysWorked").value) || 0;
+            const dailyWage = parseFloat(document.getElementById("dailyWage").value) || 0;
+            const otHours = parseFloat(document.getElementById("otHours").value) || 0;
+            const otRate = parseFloat(document.getElementById("otRate").value) || 0;
+            let reimbursementAmount = parseFloat(document.getElementById("reimbursementAmount").value) || 0;
+
+            if (name && daysWorked > 0 && dailyWage > 0) {
+                const totalWages = dailyWage * daysWorked;
+                const otPay = otHours * otRate;
+                const totalWithOT = totalWages + otPay;
+                const netPay = totalWithOT - reimbursementAmount;
+
+                // แสดงผลลัพธ์
+                document.getElementById("totalWages").textContent = `฿${totalWages.toLocaleString()}`;
+                document.getElementById("otPay").textContent = `฿${otPay.toLocaleString()}`;
+                document.getElementById("totalWithOT").textContent = `฿${totalWithOT.toLocaleString()}`;
+                document.getElementById("reimbursementAmountResult").textContent = `฿${reimbursementAmount.toLocaleString()}`;
+                document.getElementById("netPay").textContent = `฿${netPay.toLocaleString()}`;
+
+                document.getElementById("resultPanel").classList.remove("hidden");
+
+                // แสดงรายละเอียดการเบิกเงิน (ถ้ามี)
+                displayWithdrawalDetails();
+
+                // ส่งข้อมูลไปบันทึกในฐานข้อมูล
+                const calculationData = {
+                    employee_name: name,
+                    days_worked: daysWorked,
+                    ot_hours: otHours,
+                    daily_wage: dailyWage,
+                    ot_wage: otPay,
+                    total_wage_ot: totalWithOT,
+                    reimbursement: reimbursementAmount,
+                    remark: "", // Add empty string as default or remove this line
+                    net_pay: netPay
+                };
+
+                saveCalculation(calculationData);
+            } else {
+                alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+            }
+        }
+
+        function displayWithdrawalDetails() {
+            const detailsList = document.getElementById("withdrawalDetailsList");
+            const noDataMessage = document.getElementById("noWithdrawalsMessage");
+
+            // เคลียร์รายการเดิม
+            detailsList.innerHTML = "";
+
+            if (withdrawalData.length === 0) {
+                noDataMessage.style.display = "block";
+                detailsList.style.display = "none";
+            } else {
+                noDataMessage.style.display = "none";
+                detailsList.style.display = "block";
+
+                // สร้างรายการแสดงข้อมูลการเบิกเงิน
+                withdrawalData.forEach(item => {
+                    const listItem = document.createElement("li");
+                    const date = new Date(item.date).toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    listItem.innerHTML = `
+                        <div class="withdrawal-item">
+                            <div class="withdrawal-date">วันที่ ${date}</div>
+                            <div class="withdrawal-reason">เหตุผล: ${item.reason}</div>
+                            <div class="withdrawal-amount">จำนวน: ฿${parseFloat(item.amount).toLocaleString()}</div>
+                        </div>
+                    `;
+
+                    detailsList.appendChild(listItem);
+                });
+            }
+        }
+
+        async function showReimbursementHistory() {
+            const name = document.getElementById("name").value.trim();
+            const startDate = document.getElementById("startDate").value;
+            const endDate = document.getElementById("endDate").value;
+
+            if (!name) {
+                alert("กรุณากรอกชื่อพนักงานก่อนดูประวัติการเบิก");
+                return;
+            }
+
+            try {
+                // สร้าง URL และเพิ่มพารามิเตอร์ startDate และ endDate
+                const url = new URL(`http://localhost:3001/datewithdraws`);
+                url.searchParams.append('name', name);
+                if (startDate) {
+                    url.searchParams.append('startDate', startDate);
+                }
+                if (endDate) {
+                    url.searchParams.append('endDate', endDate);
+                }
+
+                // เรียก API
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    // เก็บข้อมูลไว้ใช้แสดงในส่วนผลลัพธ์
+                    withdrawalData = data;
+
+                    const list = document.querySelector('.reimbursement-list');
+                    list.innerHTML = ''; // ล้างรายการก่อนเพิ่มใหม่
+
+                    if (data.length === 0) {
+                        list.innerHTML = '<li>ไม่มีประวัติการเบิก</li>';
+                    } else {
+                        let totalReimbursement = 0;
+                        data.forEach(item => {
+                            totalReimbursement += parseFloat(item.amount);
+
+                            const listItem = document.createElement('li');
+                            listItem.classList.add('reimbursement-item');
+                            listItem.innerHTML = `
+                                <div class="reimbursement-details">
+                                    <div class="reimbursement-date">${new Date(item.date).toLocaleDateString()}</div>
+                                    <div class="reimbursement-amount">฿${parseFloat(item.amount).toLocaleString()}</div>
+                                    <div class="reimbursement-remark">${item.reason}</div>
+                                </div>
+                            `;
+                            list.appendChild(listItem);
+                        });
+
+                        document.getElementById("reimbursementAmount").value = totalReimbursement;
+                    }
+
+                    document.getElementById("reimbursementHistoryPanel").classList.remove("hidden");
+                } else {
+                    alert(data.error || "เกิดข้อผิดพลาดในการโหลดข้อมูล");
+                }
+            } catch (error) {
+                console.error("เกิดข้อผิดพลาด:", error);
+                alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const nameInput = document.getElementById("name");
+            let employees = JSON.parse(localStorage.getItem("employeeNames")) || [];
+
+            function showSuggestions() {
+                let value = nameInput.value.trim().toLowerCase();
+                let datalist = document.getElementById("employeeList");
+
+                if (!datalist) {
+                    datalist = document.createElement("datalist");
+                    datalist.id = "employeeList";
+                    document.body.appendChild(datalist);
+                    nameInput.setAttribute("list", "employeeList");
+                }
+
+                datalist.innerHTML = "";
+                employees
+                    .filter(name => name.toLowerCase().includes(value))
+                    .forEach(name => {
+                        let option = document.createElement("option");
+                        option.value = name;
+                        datalist.appendChild(option);
+                    });
+            }
+
+            nameInput.addEventListener("input", showSuggestions);
+
+            nameInput.addEventListener("change", function () {
+                let name = nameInput.value.trim();
+                if (name && !employees.includes(name)) {
+                    employees.push(name);
+                    localStorage.setItem("employeeNames", JSON.stringify(employees));
+                }
+            });
+        });
+
+
+
+    </script>
+</body>
+
+</html>

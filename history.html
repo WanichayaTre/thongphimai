@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ประวัติการคำนวณค่าแรงและการเบิก</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white shadow-xl rounded-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-800 p-6">
+                <div class="flex items-center justify-between">
+                    <button class="text-white hover:bg-blue-700 transition-colors duration-300 px-4 py-2 rounded">
+                        <a href="work.html" class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            ย้อนกลับ
+                        </a>
+                    </button>
+                    <h1 class="text-2xl font-bold text-white text-center flex-grow">ประวัติการคำนวณค่าแรงและการเบิก</h1>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="flex justify-center mb-6 space-x-4">
+                    <button onclick="showTable('wage')"
+                        class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        ประวัติการคำนวณค่าแรง
+                    </button>
+                    <button onclick="showTable('withdrawal')"
+                        class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-green-400">
+                        ประวัติการเบิก
+                    </button>
+                    <button onclick="showIndividualWithdrawalDetails()"
+                        class="px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        ดูรายละเอียดการเบิกรายบุคคล
+                    </button>
+                </div>
+
+
+                <div id="wageTableContainer" class="hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">1. ประวัติการคำนวณค่าแรง</h2>
+                        <div class="space-x-2">
+                            <button onclick="exportTable('wageTable', 'wage_history')"
+                                class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-300 shadow-md">
+                                Export Excel
+                            </button>
+                            <button onclick="printTable('wageTable')"
+                                class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-300 shadow-md">
+                                Print
+                            </button>
+                            <button onclick="deleteSelectedRows('wageTable', 'http://localhost:3001/api/wage')"
+                                class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors duration-300 shadow-md">
+                                ลบรายการที่เลือก
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table id="wageTable" class="w-full bg-white text-center">
+                            <thead class="bg-gray-200 border-b ">
+                                <tr>
+                                    <th class="p-3 text-left"><input type="checkbox" id="selectAllWage"
+                                            onclick="selectAll('wageTable', this)"></th>
+                                    <th
+                                        class="p-3  text-xs font-big text-gray-500 uppercase tracking-wider text-center">
+                                        ชื่อ-นามสกุล</th>
+                                    <th
+                                        class="p-3  text-xs font-big text-gray-500 uppercase tracking-wider text-center">
+                                        วันที่คำนวน</th>
+                                    <th
+                                        class="p-3  text-xs font-big text-gray-500 uppercase tracking-wider text-center">
+                                        จำนวนวันที่ทำงาน</th>
+                                    <th
+                                        class="p-3  text-xs font-big text-gray-500 uppercase tracking-wider text-center">
+                                        ค่าแรงรายวัน</th>
+                                    <th class="p-3 text-xs font-big text-gray-500 uppercase tracking-wider text-center">
+                                        จำนวนโอที(ชั่วโมง)</th>
+                                    <th
+                                        class="p-3  text-xs font-big text-gray-500 uppercase tracking-wider text-center">
+                                        ค่าแรง OT</th>
+                                    <th
+                                        class="p-3  text-xs font-big text-gray-500 uppercase tracking-wider text-center">
+                                        ค่าแรงทั้งหมด+OT</th>
+                                    <th
+                                        class="p-3  text-xs font-big text-gray-500 uppercase tracking-wider text-center">
+                                        เงินเบิกสุทธิ</th>
+                                    <th
+                                        class="p-3  text-xs font-big text-gray-500 uppercase tracking-wider text-center">
+                                        หมายเหตุ</th>
+                                    <th
+                                        class="p-3  text-xs font-big text-gray-500 uppercase tracking-wider text-center">
+                                        ค่าแรงสุทธิ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50 transition-colors duration-200">
+                                    <td class="p-3 border-b"><input type="checkbox" class="row-checkbox"></td>
+                                    <td class="p-3 border-b text-sm text-gray-700">สมชาย ใจดี</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">01/03/2025</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">22</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">10</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">500</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">250</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">2,750</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">1,000</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">-</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">1,750</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="withdrawalTableContainer" class="hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">2. ประวัติการเบิก</h2>
+                        <div class="space-x-2">
+                            <button onclick="exportTable('withdrawalTable', 'withdrawal_history')"
+                                class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-300 shadow-md">
+                                Export Excel
+                            </button>
+                            <button onclick="printTable('withdrawalTable')"
+                                class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-300 shadow-md">
+                                Print
+                            </button>
+                            <button
+                                onclick="deleteSelectedRows('withdrawalTable', 'http://localhost:3001/api/withdrawal')"
+                                class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors duration-300 shadow-md">
+                                ลบรายการที่เลือก
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table id="withdrawalTable" class="w-full bg-white">
+                            <thead class="bg-gray-100 border-b">
+                                <tr>
+                                    <th class="p-3 text-left"><input type="checkbox" id="selectAllWithdrawal"
+                                            onclick="selectAll('withdrawalTable', this)"></th>
+                                    <th
+                                        class="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        ชื่อ</th>
+                                    <th
+                                        class="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        วันที่เบิก</th>
+                                    <th
+                                        class="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        จำนวนที่เบิก</th>
+                                    <th
+                                        class="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        หมายเหตุ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50 transition-colors duration-200">
+                                    <td class="p-3 border-b"><input type="checkbox" class="row-checkbox"></td>
+                                    <td class="p-3 border-b text-sm text-gray-700">สมชาย ใจดี</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">25/02/2025</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">1,000</td>
+                                    <td class="p-3 border-b text-sm text-gray-700">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add a select all checkbox to the header section
+        function showIndividualWithdrawalDetails() {
+            // Create a modal for individual withdrawal details
+            const modalContainer = document.createElement('div');
+            modalContainer.id = 'individualWithdrawalModal';
+            modalContainer.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+
+            modalContainer.innerHTML = `
+        <div class="bg-white rounded-xl w-11/12 max-w-6xl max-h-[90vh] flex flex-col shadow-2xl">
+            <div class="bg-purple-600 text-white p-4 rounded-t-xl flex flex-col space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold">รายละเอียดการเบิกรายบุคคล</h2>
+                    <div class="flex space-x-2">
+                        <button onclick="printIndividualWithdrawalDetails()" 
+                            class="bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+                            </svg>
+                            พิมพ์รายการที่เลือก
+                        </button>
+                        <button onclick="closeIndividualWithdrawalModal()" 
+                            class="hover:bg-purple-700 p-2 rounded-full transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap space-x-4 items-center">
+                    <div class="flex items-center space-x-2">
+                        <label for="startDate" class="text-sm">จากวันที่:</label>
+                        <input type="date" id="startDate" class="border rounded px-2 py-1" style="color: black;">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="endDate" class="text-sm">ถึงวันที่:</label>
+                        <input type="date" id="endDate" class="border rounded px-2 py-1" style="color: black;">
+                    </div>
+                    <button onclick="filterWithdrawalDetails()" 
+                        class="bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                        กรองข้อมูล
+                    </button>
+                    <div class="flex items-center space-x-2 ml-auto">
+                        <input type="checkbox" id="selectAllWithdrawals" class="mr-1">
+                        <label for="selectAllWithdrawals" class="text-sm">เลือกทั้งหมด</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 flex-grow overflow-auto custom-scrollbar">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="individualWithdrawalContent">
+                    <!-- Cards will be dynamically populated here -->
+                </div>
+            </div>
+            
+            <div class="bg-gray-100 p-4 rounded-b-xl flex justify-between items-center">
+                <div id="summaryStats" class="text-sm text-gray-700">
+                    <!-- Summary statistics will be added here -->
+                </div>
+                <button onclick="exportIndividualWithdrawalDetails()" 
+                    class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                    ส่งออกข้อมูล
+                </button>
+            </div>
+        </div>
+    `;
+
+            document.body.appendChild(modalContainer);
+
+            // Set default date range to current month
+            const today = new Date();
+            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('startDate').valueAsDate = firstDayOfMonth;
+            document.getElementById('endDate').valueAsDate = today;
+
+            // Fetch and populate individual withdrawal details
+            fetchWithdrawalDetails();
+
+            // Add select all functionality
+            document.getElementById('selectAllWithdrawals').addEventListener('change', function () {
+                const checkboxes = document.querySelectorAll('.withdrawal-card-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+        }
+
+        function fetchWithdrawalDetails(startDate = null, endDate = null) {
+            fetch("http://localhost:3001/hitoryswithdrawals")
+                .then(response => response.json())
+                .then(data => {
+                    // Filter data by date range if dates are provided
+                    const filteredData = startDate && endDate
+                        ? data.filter(withdrawal => {
+                            const withdrawalDate = new Date(withdrawal.date);
+
+                            // Adjust for startDate and endDate to ignore time difference issues
+                            const start = new Date(startDate);
+                            start.setHours(0, 0, 0, 0); // Set to midnight to ignore time part
+
+                            const end = new Date(endDate);
+                            end.setHours(23, 59, 59, 999); // Set to end of the day to include all withdrawals on end date
+
+                            return withdrawalDate >= start && withdrawalDate <= end;
+                        })
+                        : data;
+
+                    const contentContainer = document.getElementById('individualWithdrawalContent');
+                    const summaryStatsContainer = document.getElementById('summaryStats');
+
+                    // Clear previous content
+                    contentContainer.innerHTML = '';
+                    summaryStatsContainer.innerHTML = '';
+
+                    // Group withdrawals by name
+                    const groupedWithdrawals = filteredData.reduce((acc, withdrawal) => {
+                        if (!acc[withdrawal.name]) {
+                            acc[withdrawal.name] = [];
+                        }
+                        acc[withdrawal.name].push(withdrawal);
+                        return acc;
+                    }, {});
+
+                    // Tracking overall statistics
+                    let totalPeople = 0;
+                    let overallTotalWithdrawn = 0;
+
+                    // Create cards for each individual
+                    Object.entries(groupedWithdrawals).forEach(([name, withdrawals, reason]) => {
+                        const totalWithdrawn = withdrawals.reduce((sum, w) => sum + parseFloat(w.amount.replace(/,/g, '')), 0);
+
+                        // Update overall statistics
+                        totalPeople++;
+                        overallTotalWithdrawn += totalWithdrawn;
+
+                        const card = document.createElement('div');
+                        card.className = 'bg-white border rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow space-y-3';
+                        card.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <input type="checkbox" class="withdrawal-card-checkbox mr-2">
+                        <h3 class="text-lg font-bold text-purple-700">${name}</h3>
+                    </div>
+                    <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        จำนวนครั้งที่เบิก: ${withdrawals.length}
+                    </span>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <p class="font-semibold">ยอดเบิกรวม: 
+                        <span class="text-green-600">${totalWithdrawn.toLocaleString()} บาท</span>
+                    </p>
+                </div>
+                <div class="border-t pt-2 mt-2 max-h-40 overflow-y-auto custom-scrollbar">
+                    <h4 class="text-sm font-semibold mb-2 text-gray-700">รายการเบิก</h4>
+                    <ul class="text-xs space-y-1">
+                        ${withdrawals.map(w => `
+                            <li class="flex justify-between bg-gray-50 p-1.5 rounded">
+                                <span>${w.date}    ${w.reason || ""}</span>
+                                <span class="font-semibold text-blue-600">${w.amount} บาท</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+
+                        contentContainer.appendChild(card);
+                    });
+
+                    // Update summary statistics
+                    summaryStatsContainer.innerHTML = `
+            <p>จำนวนพนักงานที่เบิก: <span class="font-bold">${totalPeople}</span></p>
+            <p>ยอดเบิกรวมทั้งหมด: <span class="font-bold text-green-600">${overallTotalWithdrawn.toLocaleString()} บาท</span></p>
+        `;
+
+                    // Add select all checkbox functionality
+                    addSelectAllCheckboxListener();
+                })
+                .catch(error => {
+                    console.error("Error fetching individual withdrawal details:", error);
+                    alert("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+                });
+        }
+
+        function filterWithdrawalDetails() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                alert('กรุณาเลือกช่วงวันที่');
+                return;
+            }
+
+            fetchWithdrawalDetails(startDate, endDate);
+        }
+
+        // Function to add listener for the select all checkbox
+        function addSelectAllCheckboxListener() {
+            const selectAllCheckbox = document.getElementById('selectAllWithdrawals');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function () {
+                    const checkboxes = document.querySelectorAll('.withdrawal-card-checkbox');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                });
+            }
+        }
+
+
+        function printIndividualWithdrawalDetails() {
+            const cards = document.querySelectorAll('#individualWithdrawalContent .bg-white');
+            const selectedCards = Array.from(cards).filter(card => {
+                const checkbox = card.querySelector('.withdrawal-card-checkbox');
+                return checkbox && checkbox.checked;
+            });
+
+            if (selectedCards.length === 0) {
+                alert("กรุณาเลือกรายการที่ต้องการพิมพ์");
+                return;
+            }
+
+            const printStyle = `
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #printableTable, 
+        #printableTable * {
+            visibility: visible !important;
+        }
+        #printableTable {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        table, th, td {
+            border: 1px solid #000;
+            padding: 5px;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .print-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .print-summary {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    }
+</style>`;
+
+            // สร้างตารางสำหรับพิมพ์
+            const printTable = document.createElement('div');
+            printTable.id = 'printableTable';
+
+            // เพิ่มหัวเอกสาร
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            // คำนวณสรุปสำหรับรายการที่เลือก
+            let totalPeople = selectedCards.length;
+            let overallTotalWithdrawn = 0;
+
+            selectedCards.forEach(card => {
+                const totalText = card.querySelector('.text-green-600').textContent;
+                const totalAmount = parseFloat(totalText.replace(/[^\d,.]/g, '').replace(',', ''));
+                overallTotalWithdrawn += isNaN(totalAmount) ? 0 : totalAmount;
+            });
+
+            printTable.innerHTML = `
+<div class="print-header">
+    <h1>รายละเอียดการเบิกเงินรายบุคคล (รายการที่เลือก)</h1>
+    <p>ระหว่างวันที่: ${startDate} ถึง ${endDate}</p>
+</div>
+
+<div class="print-summary">
+    <p>จำนวนพนักงานที่เบิก (ที่เลือก): <span class="font-bold">${totalPeople}</span></p>
+    <p>ยอดเบิกรวมทั้งหมด (ที่เลือก): <span class="font-bold text-green-600">${overallTotalWithdrawn.toLocaleString()} บาท</span></p>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>ชื่อ</th>
+            <th>จำนวนครั้งที่เบิก</th>
+            <th>รายการเบิก</th>
+            <th>ยอดเบิกรวม</th>
+        </tr>
+    </thead>
+    <tbody>
+        ${selectedCards.map(card => {
+                const name = card.querySelector('.text-lg').textContent;
+                const withdrawalCount = card.querySelector('.text-sm.text-gray-500').textContent;
+                const totalWithdrawn = card.querySelector('.text-green-600').textContent;
+                const withdrawalItems = Array.from(card.querySelectorAll('ul li'))
+                    .map(li => li.textContent.trim())
+                    .join('<br>');
+
+                return `
+                <tr>
+                    <td>${name}</td>
+                    <td>${withdrawalCount}</td>
+                    <td>${withdrawalItems}</td>
+                    <td>${totalWithdrawn}</td>
+                </tr>
+            `;
+            }).join('')}
+    </tbody>
+</table>
+`;
+
+            // สร้าง style และ div สำหรับพิมพ์
+            const printContainer = document.createElement('div');
+            printContainer.innerHTML = printStyle;
+            printContainer.appendChild(printTable);
+
+            // บันทึกเนื้อหาเดิม
+            const originalBody = document.body.innerHTML;
+
+            // แทนที่เนื้อหา body
+            document.body.innerHTML = '';
+            document.body.appendChild(printContainer);
+
+            // พิมพ์
+            window.print();
+
+            // คืนค่าเนื้อหาเดิม
+            document.body.innerHTML = originalBody;
+
+            // รีโหลดเพื่อเรียกใช้ JavaScript
+            location.reload();
+        }
+
+
+        function closeIndividualWithdrawalModal() {
+            const modal = document.getElementById('individualWithdrawalModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function exportIndividualWithdrawalDetails() {
+            const cards = document.querySelectorAll('#individualWithdrawalContent .bg-white');
+            const selectedCards = Array.from(cards).filter(card => {
+                const checkbox = card.querySelector('.withdrawal-card-checkbox');
+                return checkbox && checkbox.checked;
+            });
+
+            if (selectedCards.length === 0) {
+                alert("กรุณาเลือกรายการที่ต้องการส่งออก");
+                return;
+            }
+
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            // สร้างตารางสำหรับส่งออก
+            const exportTable = document.createElement('table');
+            exportTable.innerHTML = `
+        <thead>
+            <tr>
+                <th>ชื่อ</th>
+                <th>จำนวนครั้งที่เบิก</th>
+                <th>ยอดเบิกรวม</th>
+                <th>วันที่เบิก</th>
+                <th>จำนวนเงิน</th>
+                <th>หมายเหตุ</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${selectedCards.map(card => {
+                const name = card.querySelector('.text-lg').textContent;
+                const withdrawalCount = card.querySelector('.text-sm.text-gray-500').textContent.replace('จำนวนครั้งที่เบิก: ', '');
+                const totalWithdrawn = card.querySelector('.text-green-600').textContent;
+
+                // Get all withdrawal items
+                const withdrawalRows = Array.from(card.querySelectorAll('ul li')).map(li => {
+                    const text = li.textContent.trim();
+                    // Extract date and amount from the text
+                    const datePart = text.split(' ')[0];
+                    const amountPart = text.match(/[\d,]+\s+บาท/)[0];
+                    const reasonPart = text.replace(datePart, '').replace(amountPart, '').trim();
+
+                    return `
+                        <tr>
+                            <td>${name}</td>
+                            <td>${withdrawalCount}</td>
+                            <td>${totalWithdrawn}</td>
+                            <td>${datePart}</td>
+                            <td>${amountPart}</td>
+                            <td>${reasonPart}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                return withdrawalRows;
+            }).join('')}
+        </tbody>
+    `;
+
+            // สร้าง workbook และเพิ่มตาราง
+            const wb = XLSX.utils.table_to_book(exportTable);
+            XLSX.writeFile(wb, `การเบิกเงินรายบุคคล_ที่เลือก_${startDate}_ถึง_${endDate}.xlsx`);
+        }
+
+
+
+        // โค้ดส่วนอื่นๆๆ
+        function showTable(type) {
+            // Hide both containers
+            document.getElementById('wageTableContainer').classList.add('hidden');
+            document.getElementById('withdrawalTableContainer').classList.add('hidden');
+
+            // Show the selected container
+            document.getElementById(type + 'TableContainer').classList.remove('hidden');
+        }
+
+        // ฟังก์ชั่นเลือกทั้งหมด
+        function selectAll(tableId, checkbox) {
+            const table = document.getElementById(tableId);
+            const rowCheckboxes = table.querySelectorAll('.row-checkbox');
+            rowCheckboxes.forEach(cb => cb.checked = checkbox.checked);
+        }
+
+        function exportTable(tableId, filename) {
+            const table = document.getElementById(tableId);
+            const selectedRows = table.querySelectorAll('.row-checkbox:checked');
+
+            if (selectedRows.length === 0) {
+                alert("กรุณาเลือกรายการที่ต้องการส่งออก");
+                return;
+            }
+
+            // สร้างตารางใหม่สำหรับส่งออก
+            const exportTable = document.createElement('table');
+
+            // คัดลอกส่วนหัวของตาราง
+            const headerRow = table.querySelector('thead tr').cloneNode(true);
+
+            // ลบเช็คบ็อกซ์จากส่วนหัว
+            const firstHeaderCell = headerRow.querySelector('th:first-child');
+            if (firstHeaderCell && firstHeaderCell.querySelector('input[type="checkbox"]')) {
+                firstHeaderCell.innerHTML = 'ลำดับ';
+            }
+
+            // สร้าง thead และใส่ headerRow
+            const thead = document.createElement('thead');
+            thead.appendChild(headerRow);
+            exportTable.appendChild(thead);
+
+            // สร้าง tbody สำหรับแถวที่เลือก
+            const tbody = document.createElement('tbody');
+
+            // คัดลอกเฉพาะแถวที่เลือก
+            let rowNumber = 1;
+            selectedRows.forEach(checkbox => {
+                const row = checkbox.closest('tr').cloneNode(true);
+
+                // แทนที่เช็คบ็อกซ์ด้วยเลขลำดับ
+                const firstCell = row.querySelector('td:first-child');
+                if (firstCell) {
+                    firstCell.textContent = rowNumber++;
+                }
+
+                // ลบปุ่มแก้ไข
+                const editButtons = row.querySelectorAll('.edit-note-btn');
+                editButtons.forEach(btn => btn.remove());
+
+                // แปลง input เป็นข้อความปกติ
+                const inputs = row.querySelectorAll('input:not(.row-checkbox)');
+                inputs.forEach(input => {
+                    const text = document.createElement('span');
+                    text.textContent = input.value || '-';
+                    input.parentElement.replaceChild(text, input);
+                });
+
+                tbody.appendChild(row);
+            });
+
+            exportTable.appendChild(tbody);
+
+            // สร้าง div ชั่วคราวเพื่อเก็บตารางส่งออก
+            const tempDiv = document.createElement('div');
+            tempDiv.style.display = 'none';
+            tempDiv.appendChild(exportTable);
+            document.body.appendChild(tempDiv);
+
+            // ส่งออกเป็น Excel
+            const wb = XLSX.utils.table_to_book(exportTable);
+            XLSX.writeFile(wb, `${filename}_${selectedRows.length}_รายการ.xlsx`);
+
+            // ลบ div ชั่วคราว
+            document.body.removeChild(tempDiv);
+        }
+
+
+        // ฟังก์ชันการพิมพ์
+        // ฟังก์ชั่นพิมพ์ตาราง
+        function printTable(tableId) {
+            const table = document.getElementById(tableId);
+            const selectedRows = table.querySelectorAll('.row-checkbox:checked');
+
+            if (selectedRows.length === 0) {
+                alert("กรุณาเลือกรายการที่ต้องการพิมพ์");
+                return;
+            }
+
+            // สร้างตารางใหม่สำหรับการพิมพ์
+            const printTable = document.createElement('table');
+            printTable.className = 'w-full border-collapse';
+
+            // คัดลอกส่วนหัวของตาราง
+            const headerRow = table.querySelector('thead tr').cloneNode(true);
+
+            // ลบเช็คบ็อกซ์จากส่วนหัว (ถ้ามี)
+            const firstHeaderCell = headerRow.querySelector('th:first-child');
+            if (firstHeaderCell && firstHeaderCell.querySelector('input[type="checkbox"]')) {
+                firstHeaderCell.innerHTML = 'ลำดับ';
+            }
+
+            // สร้าง thead และใส่ headerRow
+            const thead = document.createElement('thead');
+            thead.appendChild(headerRow);
+            printTable.appendChild(thead);
+
+            // สร้าง tbody สำหรับแถวที่เลือก
+            const tbody = document.createElement('tbody');
+
+            // คัดลอกเฉพาะแถวที่เลือก
+            let rowNumber = 1;
+            selectedRows.forEach(checkbox => {
+                const row = checkbox.closest('tr').cloneNode(true);
+
+                // แทนที่เช็คบ็อกซ์ด้วยเลขลำดับ
+                const firstCell = row.querySelector('td:first-child');
+                if (firstCell) {
+                    firstCell.textContent = rowNumber++;
+                }
+
+                // ลบปุ่มแก้ไข (ถ้ามี)
+                const editButtons = row.querySelectorAll('.edit-note-btn');
+                editButtons.forEach(btn => btn.remove());
+
+                // แปลง input เป็นข้อความปกติ
+                const inputs = row.querySelectorAll('input:not(.row-checkbox)');
+                inputs.forEach(input => {
+                    const text = document.createElement('span');
+                    text.textContent = input.value || '-';
+                    input.parentElement.replaceChild(text, input);
+                });
+
+                tbody.appendChild(row);
+            });
+
+            printTable.appendChild(tbody);
+
+            // สร้างคอนเทนเนอร์สำหรับการพิมพ์
+            const printContainer = document.createElement('div');
+            printContainer.innerHTML = `
+        <style>
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+                #printContent, #printContent * {
+                    visibility: visible;
+                }
+                #printContent {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                th, td {
+                    border: 1px solid black;
+                    padding: 8px;
+                    text-align: left;
+                }
+                th {
+                    background-color: #f2f2f2;
+                }
+                .print-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+            }
+        </style>
+        <div id="printContent">
+            <div class="print-header">
+                <h1>รายงานค่าแรงและการเบิกเงิน (รายการที่เลือก)</h1>
+                <p>วันที่พิมพ์: ${new Date().toLocaleDateString()}</p>
+                <p>จำนวนรายการที่เลือก: ${selectedRows.length} รายการ</p>
+            </div>
+        </div>
+    `;
+
+            const printContentDiv = printContainer.querySelector('#printContent');
+            printContentDiv.appendChild(printTable);
+
+            // บันทึกเนื้อหาเดิม
+            const originalContents = document.body.innerHTML;
+
+            // แทนที่ด้วยเนื้อหาสำหรับพิมพ์
+            document.body.innerHTML = printContainer.innerHTML;
+
+            // พิมพ์
+            window.print();
+
+            // คืนค่าเนื้อหาเดิม
+            document.body.innerHTML = originalContents;
+
+            // รีโหลดเพื่อให้ JavaScript ทำงานอีกครั้ง
+            location.reload();
+        }
+
+        // เพิ่ม event listener เมื่อโหลดหน้าเสร็จ
+        document.addEventListener("DOMContentLoaded", function () {
+            fetchWageHistory();
+            fetchWithdrawalHistory();
+        });
+
+
+        // ฟังก์ชั่นลบแถวที่เลือก
+        function deleteSelectedRows(tableId, apiEndpoint) {
+            const table = document.getElementById(tableId);
+            const rowCheckboxes = table.querySelectorAll('.row-checkbox:checked');
+            const ids = [];
+
+            rowCheckboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                const id = row.getAttribute("data-id");
+                if (id) ids.push(id);
+            });
+
+            if (ids.length === 0) {
+                alert("กรุณาเลือกรายการที่ต้องการลบ");
+                return;
+            }
+
+            if (!confirm("คุณแน่ใจหรือไม่ที่จะลบรายการที่เลือก?")) {
+                return;
+            }
+
+            fetch(apiEndpoint, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);
+                    rowCheckboxes.forEach(checkbox => checkbox.closest("tr").remove());
+                    // ยกเลิกการเลือก "เลือกทั้งหมด" checkbox
+                    const selectAllCheckbox = table.querySelector('thead input[type="checkbox"]');
+                    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                })
+                .catch(error => {
+                    console.error("Error deleting records:", error);
+                    alert("เกิดข้อผิดพลาดในการลบรายการ");
+                });
+        }
+
+        // Modify the fetchWageHistory function to include an edit button and make note fields readonly by default
+        function fetchWageHistory() {
+            fetch("http://localhost:3001/api/wage")
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector("#wageTable tbody");
+                    tableBody.innerHTML = "";
+                    data.forEach(row => {
+                        const reason = row.withdrawal_reason || ""; // ถ้าไม่มี reason ให้ใช้ค่าว่าง
+
+                        const tr = document.createElement("tr");
+                        tr.setAttribute("data-id", row.id);
+                        tr.innerHTML = `
+                    <td class="p-2 border"><input type="checkbox" class="row-checkbox"></td>
+                    <td class="p-2 border">${row.employee_name}</td>
+                    <td class="p-2 border">${row.calculation_date.split("T")[0]}</td>
+                    <td class="p-2 border">${row.days_worked}</td>
+                    <td class="p-2 border">${row.daily_wage}</td>
+                    <td class="p-2 border">${row.ot_hours}</td>
+                    <td class="p-2 border">${row.ot_wage}</td>
+                    <td class="p-2 border">${row.total_wage_ot}</td>
+                    <td class="p-2 border">${row.reimbursement || "-"}</td>
+                    <td class="p-2 border">
+                        <input type="text" class="note-input border rounded px-1 w-full" 
+                            value="${reason}" readonly>
+                        <button class="edit-note-btn bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600 mt-1"
+                            onclick="toggleNoteEdit(this, ${row.id})">แก้ไข</button>
+                    </td>
+                    <td class="p-2 border">${row.net_pay}</td>
+                `;
+                        tableBody.appendChild(tr);
+                    });
+
+                    // เพิ่ม event listener สำหรับช่องหมายเหตุ
+                    addNoteInputEventListeners();
+                })
+                .catch(error => {
+                    console.error("Error fetching wage history:", error);
+                    alert("เกิดข้อผิดพลาดในการดึงข้อมูลประวัติค่าจ้าง");
+                });
+        }
+
+        // ฟังก์ชั่นสลับสถานะการแก้ไขหมายเหตุ
+        function toggleNoteEdit(button, rowId) {
+            const noteInput = button.previousElementSibling;
+
+            if (noteInput.hasAttribute('readonly')) {
+                // เปลี่ยนเป็นโหมดแก้ไข
+                noteInput.removeAttribute('readonly');
+                noteInput.focus();
+                button.textContent = 'บันทึก';
+                button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                button.classList.add('bg-green-500', 'hover:bg-green-600');
+            } else {
+                // บันทึกหมายเหตุและเปลี่ยนกลับเป็นโหมดอ่านอย่างเดียว
+                updateNote(rowId, noteInput.value);
+                noteInput.setAttribute('readonly', 'readonly');
+                button.textContent = 'แก้ไข';
+                button.classList.remove('bg-green-500', 'hover:bg-green-600');
+                button.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            }
+        }
+
+
+        // ฟังก์ชั่นสลับสถานะการแก้ไขหมายเหตุ
+        function toggleNoteEdit(button, rowId) {
+            const noteInput = button.previousElementSibling;
+
+            if (noteInput.hasAttribute('readonly')) {
+                // เปลี่ยนเป็นโหมดแก้ไข
+                noteInput.removeAttribute('readonly');
+                noteInput.focus();
+                button.textContent = 'บันทึก';
+                button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                button.classList.add('bg-green-500', 'hover:bg-green-600');
+            } else {
+                // บันทึกหมายเหตุและเปลี่ยนกลับเป็นโหมดอ่านอย่างเดียว
+                updateNote(rowId, noteInput.value);
+                noteInput.setAttribute('readonly', 'readonly');
+                button.textContent = 'แก้ไข';
+                button.classList.remove('bg-green-500', 'hover:bg-green-600');
+                button.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            }
+        }
+
+        // Function to handle note updates
+        // Function to handle note updates
+        function updateNote(rowId, newNote) {
+            fetch("http://localhost:3001/api/wage/note", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: rowId,
+                    note: newNote
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Note updated successfully:", data);
+                })
+
+        }
+        // Optional: Add any additional event listeners to the note inputs
+        // ฟังก์ชั่นเพิ่ม event listener สำหรับช่องหมายเหตุ
+        function addNoteInputEventListeners() {
+            document.querySelectorAll('.note-input').forEach(input => {
+                // เพิ่มคุณสมบัติบันทึกเมื่อกด Enter
+                input.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        this.blur(); // ยกเลิกโฟกัสเพื่อให้เกิด onchange event
+                    }
+                });
+            });
+        }
+
+        // ฟังก์ชั่นดึงข้อมูลประวัติการเบิกเงิน
+        function fetchWithdrawalHistory() {
+            fetch("http://localhost:3001/withdrawals")
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector("#withdrawalTable tbody");
+                    tableBody.innerHTML = "";
+                    data.forEach(row => {
+                        tableBody.innerHTML += `
+                    <tr data-id="${row.id}">
+                        <td class="p-2 border"><input type="checkbox" class="row-checkbox"></td>
+                        <td class="p-2 border">${row.name}</td>
+                        <td class="p-2 border">${row.date}</td>
+                        <td class="p-2 border">${row.amount}</td>
+                        <td class="p-2 border">${row.reason || "-"}</td>
+                    </tr>
+                `;
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching withdrawal history:", error);
+                    alert("เกิดข้อผิดพลาดในการดึงข้อมูลประวัติการเบิกเงิน");
+                });
+        }
+
+        function deleteSelectedRows(tableId, apiEndpoint) {
+            const table = document.getElementById(tableId);
+            const rowCheckboxes = table.querySelectorAll('.row-checkbox:checked');
+            const ids = [];
+
+            rowCheckboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                const id = row.getAttribute("data-id"); // ใช้ `data-id` จาก `<tr>`
+                if (id) ids.push(id);
+            });
+
+            if (ids.length === 0) {
+                alert("กรุณาเลือกรายการที่ต้องการลบ");
+                return;
+            }
+
+            fetch(apiEndpoint, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);
+                    rowCheckboxes.forEach(checkbox => checkbox.closest("tr").remove());
+                })
+                .catch(error => console.error("Error deleting records:", error));
+        }
+
+        // ฟังก์ชันสำหรับการพิมพ์เฉพาะแถวที่เลือก
+        function printTable(tableId) {
+            const table = document.getElementById(tableId);
+            const selectedRows = table.querySelectorAll('.row-checkbox:checked');
+
+            if (selectedRows.length === 0) {
+                alert("กรุณาเลือกรายการที่ต้องการพิมพ์");
+                return;
+            }
+
+            // สร้างตารางใหม่สำหรับการพิมพ์
+            const printTable = document.createElement('table');
+            printTable.className = 'w-full border-collapse';
+
+            // คัดลอกส่วนหัวของตาราง
+            const headerRow = table.querySelector('thead tr').cloneNode(true);
+
+            // ลบเช็คบ็อกซ์จากส่วนหัว (ถ้ามี)
+            const firstHeaderCell = headerRow.querySelector('th:first-child');
+            if (firstHeaderCell && firstHeaderCell.querySelector('input[type="checkbox"]')) {
+                firstHeaderCell.innerHTML = 'ลำดับ';
+            }
+
+            // สร้าง thead และใส่ headerRow
+            const thead = document.createElement('thead');
+            thead.appendChild(headerRow);
+            printTable.appendChild(thead);
+
+            // สร้าง tbody สำหรับแถวที่เลือก
+            const tbody = document.createElement('tbody');
+
+            // คัดลอกเฉพาะแถวที่เลือก
+            let rowNumber = 1;
+            selectedRows.forEach(checkbox => {
+                const row = checkbox.closest('tr').cloneNode(true);
+
+                // แทนที่เช็คบ็อกซ์ด้วยเลขลำดับ
+                const firstCell = row.querySelector('td:first-child');
+                if (firstCell) {
+                    firstCell.textContent = rowNumber++;
+                }
+
+                // ลบปุ่มแก้ไข (ถ้ามี)
+                const editButtons = row.querySelectorAll('.edit-note-btn');
+                editButtons.forEach(btn => btn.remove());
+
+                // แปลง input เป็นข้อความปกติ
+                const inputs = row.querySelectorAll('input:not(.row-checkbox)');
+                inputs.forEach(input => {
+                    const text = document.createElement('span');
+                    text.textContent = input.value || '-';
+                    input.parentElement.replaceChild(text, input);
+                });
+
+                tbody.appendChild(row);
+            });
+
+            printTable.appendChild(tbody);
+
+            // สร้างคอนเทนเนอร์สำหรับการพิมพ์
+            const printContainer = document.createElement('div');
+            printContainer.innerHTML = `
+        <style>
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+                #printContent, #printContent * {
+                    visibility: visible;
+                }
+                #printContent {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                th, td {
+                    border: 1px solid black;
+                    padding: 8px;
+                    text-align: left;
+                }
+                th {
+                    background-color: #f2f2f2;
+                }
+                .print-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+            }
+        </style>
+        <div id="printContent">
+            <div class="print-header">
+                <h1>รายงานค่าแรงและการเบิกเงิน (รายการที่เลือก)</h1>
+                <p>วันที่พิมพ์: ${new Date().toLocaleDateString()}</p>
+                <p>จำนวนรายการที่เลือก: ${selectedRows.length} รายการ</p>
+            </div>
+        </div>
+    `;
+
+            const printContentDiv = printContainer.querySelector('#printContent');
+            printContentDiv.appendChild(printTable);
+
+            // บันทึกเนื้อหาเดิม
+            const originalContents = document.body.innerHTML;
+
+            // แทนที่ด้วยเนื้อหาสำหรับพิมพ์
+            document.body.innerHTML = printContainer.innerHTML;
+
+            // พิมพ์
+            window.print();
+
+            // คืนค่าเนื้อหาเดิม
+            document.body.innerHTML = originalContents;
+
+            // รีโหลดเพื่อให้ JavaScript ทำงานอีกครั้ง
+            location.reload();
+        }
+
+        // ฟังก์ชันสำหรับการส่งออกเฉพาะแถวที่เลือก
+        function exportTable(tableId, filename) {
+            const table = document.getElementById(tableId);
+            const selectedRows = table.querySelectorAll('.row-checkbox:checked');
+
+            if (selectedRows.length === 0) {
+                alert("กรุณาเลือกรายการที่ต้องการส่งออก");
+                return;
+            }
+
+            // สร้างตารางใหม่สำหรับส่งออก
+            const exportTable = document.createElement('table');
+
+            // คัดลอกส่วนหัวของตาราง
+            const headerRow = table.querySelector('thead tr').cloneNode(true);
+
+            // ลบเช็คบ็อกซ์จากส่วนหัว
+            const firstHeaderCell = headerRow.querySelector('th:first-child');
+            if (firstHeaderCell && firstHeaderCell.querySelector('input[type="checkbox"]')) {
+                firstHeaderCell.innerHTML = 'ลำดับ';
+            }
+
+            // สร้าง thead และใส่ headerRow
+            const thead = document.createElement('thead');
+            thead.appendChild(headerRow);
+            exportTable.appendChild(thead);
+
+            // สร้าง tbody สำหรับแถวที่เลือก
+            const tbody = document.createElement('tbody');
+
+            // คัดลอกเฉพาะแถวที่เลือก
+            let rowNumber = 1;
+            selectedRows.forEach(checkbox => {
+                const row = checkbox.closest('tr').cloneNode(true);
+
+                // แทนที่เช็คบ็อกซ์ด้วยเลขลำดับ
+                const firstCell = row.querySelector('td:first-child');
+                if (firstCell) {
+                    firstCell.textContent = rowNumber++;
+                }
+
+                // ลบปุ่มแก้ไข
+                const editButtons = row.querySelectorAll('.edit-note-btn');
+                editButtons.forEach(btn => btn.remove());
+
+                // แปลง input เป็นข้อความปกติ
+                const inputs = row.querySelectorAll('input:not(.row-checkbox)');
+                inputs.forEach(input => {
+                    const text = document.createElement('span');
+                    text.textContent = input.value || '-';
+                    input.parentElement.replaceChild(text, input);
+                });
+
+                tbody.appendChild(row);
+            });
+
+            exportTable.appendChild(tbody);
+
+            // สร้าง div ชั่วคราวเพื่อเก็บตารางส่งออก
+            const tempDiv = document.createElement('div');
+            tempDiv.style.display = 'none';
+            tempDiv.appendChild(exportTable);
+            document.body.appendChild(tempDiv);
+
+            // ส่งออกเป็น Excel
+            const wb = XLSX.utils.table_to_book(exportTable);
+            XLSX.writeFile(wb, `${filename}_${selectedRows.length}_รายการ.xlsx`);
+
+            // ลบ div ชั่วคราว
+            document.body.removeChild(tempDiv);
+        }
+
+        // ฟังก์ชันสำหรับการพิมพ์รายละเอียดการเบิกรายบุคคลเฉพาะที่เลือก
+        function printIndividualWithdrawalDetails() {
+            const cards = document.querySelectorAll('#individualWithdrawalContent .bg-white');
+            const selectedCards = Array.from(cards).filter(card => {
+                // เพิ่มเช็คบ็อกซ์ให้แต่ละการ์ดก่อน หรือปรับตามโครงสร้าง UI ของคุณ
+                const checkbox = card.querySelector('.withdrawal-card-checkbox');
+                return checkbox && checkbox.checked;
+            });
+
+            if (selectedCards.length === 0) {
+                alert("กรุณาเลือกรายการที่ต้องการพิมพ์");
+                return;
+            }
+
+            const printStyle = `
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printableTable, 
+            #printableTable * {
+                visibility: visible !important;
+            }
+            #printableTable {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12px;
+            }
+            table, th, td {
+                border: 1px solid #000;
+                padding: 5px;
+            }
+            th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+            }
+            .print-header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .print-summary {
+                margin-bottom: 20px;
+                font-size: 14px;
+            }
+        }
+    </style>`;
+
+            // สร้างตารางสำหรับพิมพ์
+            const printTable = document.createElement('div');
+            printTable.id = 'printableTable';
+
+            // เพิ่มหัวเอกสาร
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            // คำนวณสรุปสำหรับรายการที่เลือก
+            let totalPeople = selectedCards.length;
+            let overallTotalWithdrawn = 0;
+
+            selectedCards.forEach(card => {
+                const totalText = card.querySelector('.text-green-600').textContent;
+                const totalAmount = parseFloat(totalText.replace(/[^\d.-]/g, ''));
+                overallTotalWithdrawn += isNaN(totalAmount) ? 0 : totalAmount;
+            });
+
+            printTable.innerHTML = `
+    <div class="print-header">
+        <h1>รายละเอียดการเบิกเงินรายบุคคล (รายการที่เลือก)</h1>
+        <p>ระหว่างวันที่: ${startDate} ถึง ${endDate}</p>
+    </div>
+    
+    <div class="print-summary">
+        <p>จำนวนพนักงานที่เบิก (ที่เลือก): <span class="font-bold">${totalPeople}</span></p>
+        <p>ยอดเบิกรวมทั้งหมด (ที่เลือก): <span class="font-bold text-green-600">${overallTotalWithdrawn.toLocaleString()} บาท</span></p>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ชื่อ</th>
+                <th>จำนวนครั้งที่เบิก</th>
+                <th>รายการเบิก</th>
+                <th>ยอดเบิกรวม</th>
+                <th>หมายเหตุ</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${selectedCards.map(card => {
+                const name = card.querySelector('.text-lg').textContent;
+                const withdrawalCount = card.querySelector('.text-sm.text-gray-500').textContent;
+                const totalWithdrawn = card.querySelector('.text-green-600').textContent;
+                const withdrawalItems = Array.from(card.querySelectorAll('ul li'))
+                    .map(li => li.textContent.trim())
+                    .join('<br>');
+
+                // Add notes from data if available
+                let notes = "-";
+                if (card.querySelector('.withdrawal-notes')) {
+                    notes = card.querySelector('.withdrawal-notes').textContent;
+                }
+
+                return `
+                    <tr>
+                        <td>${name}</td>
+                        <td>${withdrawalCount}</td>
+                        <td>${withdrawalItems}</td>
+                         <td>${totalWithdrawn}</td>
+                        <td>${notes}</td>
+                    </tr>
+                `;
+            }).join('')}
+        </tbody>
+    </table>
+    `;
+
+            // สร้าง style และ div สำหรับพิมพ์
+            const printContainer = document.createElement('div');
+            printContainer.innerHTML = printStyle;
+            printContainer.appendChild(printTable);
+
+            // บันทึกเนื้อหาเดิม
+            const originalBody = document.body.innerHTML;
+
+            // แทนที่เนื้อหา body
+            document.body.innerHTML = '';
+            document.body.appendChild(printContainer);
+
+            // พิมพ์
+            window.print();
+
+            // คืนค่าเนื้อหาเดิม
+            document.body.innerHTML = originalBody;
+
+            // รีโหลดเพื่อเรียกใช้ JavaScript
+            location.reload();
+        }
+
+        // ฟังก์ชันสำหรับการส่งออกรายละเอียดการเบิกรายบุคคลเฉพาะที่เลือก
+        function exportIndividualWithdrawalDetails() {
+            const cards = document.querySelectorAll('#individualWithdrawalContent .bg-white');
+            const selectedCards = Array.from(cards).filter(card => {
+                // เพิ่มเช็คบ็อกซ์ให้แต่ละการ์ดก่อน หรือปรับตามโครงสร้าง UI ของคุณ
+                const checkbox = card.querySelector('.withdrawal-card-checkbox');
+                return checkbox && checkbox.checked;
+            });
+
+            if (selectedCards.length === 0) {
+                alert("กรุณาเลือกรายการที่ต้องการส่งออก");
+                return;
+            }
+
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            // สร้างตารางสำหรับส่งออก
+            const exportTable = document.createElement('table');
+            exportTable.innerHTML = `
+        <thead>
+            <tr>
+                <th>ชื่อ</th>
+                <th>จำนวนครั้งที่เบิก</th>
+                <th>ยอดเบิกรวม</th>
+                <th>วันที่เบิก</th>
+                <th>จำนวนเงิน</th>
+                <th>หมายเหตุ</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${selectedCards.map(card => {
+                const name = card.querySelector('.text-lg').textContent;
+                const withdrawalCount = card.querySelector('.text-sm.text-gray-500').textContent.replace('จำนวนครั้งที่เบิก: ', '');
+                const totalWithdrawn = card.querySelector('.text-green-600').textContent;
+
+                // Get all withdrawal items
+                const withdrawalRows = Array.from(card.querySelectorAll('ul li')).map(li => {
+                    const text = li.textContent.trim();
+                    // Extract date and amount from the text
+                    const datePart = text.split(' ')[0];
+                    const amountPart = text.match(/[\d,]+\s+บาท/)[0];
+                    const reasonPart = text.replace(datePart, '').replace(amountPart, '').trim();
+
+                    return `
+                        <tr>
+                            <td>${name}</td>
+                            <td>${withdrawalCount}</td>
+                            <td>${totalWithdrawn}</td>
+                            <td>${datePart}</td>
+                            <td>${amountPart}</td>
+                            <td>${reasonPart}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                return withdrawalRows;
+            }).join('')}
+        </tbody>
+    `;
+
+            // สร้าง workbook และเพิ่มตาราง
+            const wb = XLSX.utils.table_to_book(exportTable);
+            XLSX.writeFile(wb, `การเบิกเงินรายบุคคล_ที่เลือก_${startDate}_ถึง_${endDate}.xlsx`);
+        }
+    </script>
+</body>
+
+</html>
