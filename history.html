@@ -285,125 +285,88 @@
         }
 
         function fetchWithdrawalDetails(startDate = null, endDate = null) {
-            fetch("https://my-api-fm30.onrender.com/hitoryswithdrawals")
-                .then(response => response.json())
-                .then(data => {
-                    // Filter data by date range if dates are provided
-                    const filteredData = startDate && endDate
-                        ? data.filter(withdrawal => {
-                            const withdrawalDate = new Date(withdrawal.date);
+    const url = new URL("https://my-api-fm30.onrender.com/hitoryswithdrawals");
 
-                            // Adjust for startDate and endDate to ignore time difference issues
-                            const start = new Date(startDate);
-                            start.setHours(0, 0, 0, 0); // Set to midnight to ignore time part
+    // ส่ง startDate และ endDate ไปให้ API เพื่อให้ Backend กรองข้อมูลก่อน
+    if (startDate) url.searchParams.append("startDate", startDate);
+    if (endDate) url.searchParams.append("endDate", endDate);
 
-                            const end = new Date(endDate);
-                            end.setHours(23, 59, 59, 999); // Set to end of the day to include all withdrawals on end date
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const contentContainer = document.getElementById('individualWithdrawalContent');
+            const summaryStatsContainer = document.getElementById('summaryStats');
 
-                            return withdrawalDate >= start && withdrawalDate <= end;
-                        })
-                        : data;
+            // เคลียร์ข้อมูลก่อนหน้า
+            contentContainer.innerHTML = '';
+            summaryStatsContainer.innerHTML = '';
 
-                    const contentContainer = document.getElementById('individualWithdrawalContent');
-                    const summaryStatsContainer = document.getElementById('summaryStats');
+            // จัดกลุ่มตามชื่อพนักงาน
+            const groupedWithdrawals = data.reduce((acc, withdrawal) => {
+                if (!acc[withdrawal.name]) {
+                    acc[withdrawal.name] = [];
+                }
+                acc[withdrawal.name].push(withdrawal);
+                return acc;
+            }, {});
 
-                    // Clear previous content
-                    contentContainer.innerHTML = '';
-                    summaryStatsContainer.innerHTML = '';
+            let totalPeople = 0;
+            let overallTotalWithdrawn = 0;
 
-                    // Group withdrawals by name
-                    const groupedWithdrawals = filteredData.reduce((acc, withdrawal) => {
-                        if (!acc[withdrawal.name]) {
-                            acc[withdrawal.name] = [];
-                        }
-                        acc[withdrawal.name].push(withdrawal);
-                        return acc;
-                    }, {});
+            // สร้างการ์ดพนักงานแต่ละคน
+            Object.entries(groupedWithdrawals).forEach(([name, withdrawals]) => {
+                const totalWithdrawn = withdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
 
-                    // Tracking overall statistics
-                    let totalPeople = 0;
-                    let overallTotalWithdrawn = 0;
+                totalPeople++;
+                overallTotalWithdrawn += totalWithdrawn;
 
-                    // Create cards for each individual
-                    Object.entries(groupedWithdrawals).forEach(([name, withdrawals, reason]) => {
-                        const totalWithdrawn = withdrawals.reduce((sum, w) => sum + parseFloat(w.amount.replace(/,/g, '')), 0);
-
-                        // Update overall statistics
-                        totalPeople++;
-                        overallTotalWithdrawn += totalWithdrawn;
-
-                        const card = document.createElement('div');
-                        card.className = 'bg-white border rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow space-y-3';
-                        card.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center">
-                        <input type="checkbox" class="withdrawal-card-checkbox mr-2">
-                        <h3 class="text-lg font-bold text-purple-700">${name}</h3>
+                const card = document.createElement('div');
+                card.className = 'bg-white border rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow space-y-3';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <input type="checkbox" class="withdrawal-card-checkbox mr-2">
+                            <h3 class="text-lg font-bold text-purple-700">${name}</h3>
+                        </div>
+                        <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            จำนวนครั้งที่เบิก: ${withdrawals.length}
+                        </span>
                     </div>
-                    <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        จำนวนครั้งที่เบิก: ${withdrawals.length}
-                    </span>
-                </div>
-                <div class="text-sm text-gray-600">
-                    <p class="font-semibold">ยอดเบิกรวม: 
-                        <span class="text-green-600">${totalWithdrawn.toLocaleString()} บาท</span>
-                    </p>
-                </div>
-                <div class="border-t pt-2 mt-2 max-h-40 overflow-y-auto custom-scrollbar">
-                    <h4 class="text-sm font-semibold mb-2 text-gray-700">รายการเบิก</h4>
-                    <ul class="text-xs space-y-1">
-                        ${withdrawals.map(w => `
-                            <li class="flex justify-between bg-gray-50 p-1.5 rounded">
-                                <span>${w.date}    ${w.reason || ""}</span>
-                                <span class="font-semibold text-blue-600">${w.amount} บาท</span>
-                            </li>
-                        `).join('')}
-                    </ul>
-                </div>
+                    <div class="text-sm text-gray-600">
+                        <p class="font-semibold">ยอดเบิกรวม: 
+                            <span class="text-green-600">${totalWithdrawn.toLocaleString()} บาท</span>
+                        </p>
+                    </div>
+                    <div class="border-t pt-2 mt-2 max-h-40 overflow-y-auto custom-scrollbar">
+                        <h4 class="text-sm font-semibold mb-2 text-gray-700">รายการเบิก</h4>
+                        <ul class="text-xs space-y-1">
+                            ${withdrawals.map(w => `
+                                <li class="flex justify-between bg-gray-50 p-1.5 rounded">
+                                    <span>${w.date} ${w.reason || ""}</span>
+                                    <span class="font-semibold text-blue-600">${w.amount} บาท</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+
+                contentContainer.appendChild(card);
+            });
+
+            // อัปเดตสถิติรวม
+            summaryStatsContainer.innerHTML = `
+                <p>จำนวนพนักงานที่เบิก: <span class="font-bold">${totalPeople}</span></p>
+                <p>ยอดเบิกรวมทั้งหมด: <span class="font-bold text-green-600">${overallTotalWithdrawn.toLocaleString()} บาท</span></p>
             `;
 
-                        contentContainer.appendChild(card);
-                    });
+            addSelectAllCheckboxListener();
+        })
+        .catch(error => {
+            console.error("Error fetching individual withdrawal details:", error);
+            alert("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+        });
+}
 
-                    // Update summary statistics
-                    summaryStatsContainer.innerHTML = `
-            <p>จำนวนพนักงานที่เบิก: <span class="font-bold">${totalPeople}</span></p>
-            <p>ยอดเบิกรวมทั้งหมด: <span class="font-bold text-green-600">${overallTotalWithdrawn.toLocaleString()} บาท</span></p>
-        `;
-
-                    // Add select all checkbox functionality
-                    addSelectAllCheckboxListener();
-                })
-                .catch(error => {
-                    console.error("Error fetching individual withdrawal details:", error);
-                    alert("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
-                });
-        }
-
-        function filterWithdrawalDetails() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-
-            if (!startDate || !endDate) {
-                alert('กรุณาเลือกช่วงวันที่');
-                return;
-            }
-
-            fetchWithdrawalDetails(startDate, endDate);
-        }
-
-        // Function to add listener for the select all checkbox
-        function addSelectAllCheckboxListener() {
-            const selectAllCheckbox = document.getElementById('selectAllWithdrawals');
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', function () {
-                    const checkboxes = document.querySelectorAll('.withdrawal-card-checkbox');
-                    checkboxes.forEach(checkbox => {
-                        checkbox.checked = this.checked;
-                    });
-                });
-            }
-        }
 
 
         function printIndividualWithdrawalDetails() {
