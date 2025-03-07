@@ -285,7 +285,7 @@
         }
 
         function fetchWithdrawalDetails(startDate = null, endDate = null) {
-    const url = new URL("https://my-api-fm30.onrender.com/hitoryswithdrawals");
+    const url = new URL("https://my-api-fm30.onrender.com/historyswithdrawals");
 
     // ส่ง startDate และ endDate ไปให้ API เพื่อให้ Backend กรองข้อมูลก่อน
     if (startDate) url.searchParams.append("startDate", startDate);
