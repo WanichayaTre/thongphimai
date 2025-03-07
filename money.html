@@ -95,7 +95,7 @@
             const amount = document.getElementById("reimbursementAmount").value;
 
             if (name && date && reason && amount > 0) {
-                fetch("http://localhost:3001/withdraw", {
+                fetch("https://my-api-fm30.onrender.com/withdraw", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ name, amount, reason, date })
@@ -119,7 +119,7 @@
         }
 
         function updateRecordList() {
-            fetch("http://localhost:3001/withdrawals")
+            fetch("https://my-api-fm30.onrender.com/withdrawals")
                 .then(response => response.json())
                 .then(data => {
                     const list = document.getElementById("recordList");
