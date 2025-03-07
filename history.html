@@ -285,7 +285,7 @@
         }
 
         function fetchWithdrawalDetails(startDate = null, endDate = null) {
-            fetch("http://localhost:3001/hitoryswithdrawals")
+            fetch("https://my-api-fm30.onrender.com/hitoryswithdrawals")
                 .then(response => response.json())
                 .then(data => {
                     // Filter data by date range if dates are provided
@@ -875,7 +875,7 @@
 
         // Modify the fetchWageHistory function to include an edit button and make note fields readonly by default
         function fetchWageHistory() {
-            fetch("http://localhost:3001/api/wage")
+            fetch("https://my-api-fm30.onrender.com/api/wage")
                 .then(response => response.json())
                 .then(data => {
                     const tableBody = document.querySelector("#wageTable tbody");
@@ -961,7 +961,7 @@
         // Function to handle note updates
         // Function to handle note updates
         function updateNote(rowId, newNote) {
-            fetch("http://localhost:3001/api/wage/note", {
+            fetch("https://my-api-fm30.onrender.com/api/wage/note", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -991,7 +991,7 @@
 
         // ฟังก์ชั่นดึงข้อมูลประวัติการเบิกเงิน
         function fetchWithdrawalHistory() {
-            fetch("http://localhost:3001/withdrawals")
+            fetch("https://my-api-fm30.onrender.com/withdrawals")
                 .then(response => response.json())
                 .then(data => {
                     const tableBody = document.querySelector("#withdrawalTable tbody");
