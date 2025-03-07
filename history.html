@@ -284,7 +284,7 @@
             });
         }
 
-        function fetchWithdrawalDetails(startDate = null, endDate = null) {
+       function fetchWithdrawalDetails(startDate = null, endDate = null) {
     const url = new URL("https://my-api-fm30.onrender.com/historyswithdrawals");
 
     // ส่ง startDate และ endDate ไปให้ API เพื่อให้ Backend กรองข้อมูลก่อน
@@ -367,6 +367,18 @@
         });
 }
 
+
+        function filterWithdrawalDetails() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                alert('กรุณาเลือกช่วงวันที่');
+                return;
+            }
+
+            fetchWithdrawalDetails(startDate, endDate);
+        }
 
 
         function printIndividualWithdrawalDetails() {
@@ -795,17 +807,7 @@
             fetchWithdrawalHistory();
         });
 
-        function filterWithdrawalDetails() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
 
-            if (!startDate || !endDate) {
-                alert('กรุณาเลือกช่วงวันที่');
-                return;
-            }
-
-            fetchWithdrawalDetails(startDate, endDate);
-        }
         // ฟังก์ชั่นลบแถวที่เลือก
         function deleteSelectedRows(tableId, apiEndpoint) {
             const table = document.getElementById(tableId);
