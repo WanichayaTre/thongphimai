@@ -795,7 +795,17 @@
             fetchWithdrawalHistory();
         });
 
+        function filterWithdrawalDetails() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
 
+            if (!startDate || !endDate) {
+                alert('กรุณาเลือกช่วงวันที่');
+                return;
+            }
+
+            fetchWithdrawalDetails(startDate, endDate);
+        }
         // ฟังก์ชั่นลบแถวที่เลือก
         function deleteSelectedRows(tableId, apiEndpoint) {
             const table = document.getElementById(tableId);
