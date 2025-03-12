@@ -21,6 +21,7 @@
                 <li><a href="#"><i class="fas fa-calculator"></i> คำนวนค่าแรง</a></li>
                 <li><a href="money.html"><i class="fas fa-save"></i> บันทึกเงินเบิก</a></li>
                 <li><a href="history.html"><i class="fas fa-history"></i> ประวัติ</a></li>
+                <li><a href="date.html"><i class="fas fa-calendar-check"></i> ลงเวลาทำงาน</a></li>
                 <li class="logout-item"><a href="index.html" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a></li>
             </ul>
         </div>
@@ -148,6 +149,29 @@
             const hourlyWage = dailyWage / 8;
             document.getElementById("otRate").value = hourlyWage;
         }
+        async function fetchWorkData(name, startDate, endDate) {
+    try {
+        // สร้าง URL สำหรับเรียก API
+        const url = new URL(`https://my-api-fm30.onrender.com/api/work-data`);
+        url.searchParams.append('name', name);
+        url.searchParams.append('startDate', startDate);
+        url.searchParams.append('endDate', endDate);
+
+        // เรียก API
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (response.ok) {
+            return data; // ส่งคืนข้อมูลที่ได้จาก API
+        } else {
+            throw new Error(data.error || "เกิดข้อผิดพลาดในการดึงข้อมูล");
+        }
+    } catch (error) {
+        console.error("เกิดข้อผิดพลาด:", error);
+        alert("ไม่สามารถดึงข้อมูลได้");
+        return null;
+    }
+}
 
         async function saveCalculation(data) {
             try {
@@ -172,49 +196,49 @@
         }
 
         function calculate() {
-            const name = document.getElementById("name").value.trim();
-            const daysWorked = parseFloat(document.getElementById("daysWorked").value) || 0;
-            const dailyWage = parseFloat(document.getElementById("dailyWage").value) || 0;
-            const otHours = parseFloat(document.getElementById("otHours").value) || 0;
-            const otRate = parseFloat(document.getElementById("otRate").value) || 0;
-            let reimbursementAmount = parseFloat(document.getElementById("reimbursementAmount").value) || 0;
+    const name = document.getElementById("name").value.trim();
+    const daysWorked = parseFloat(document.getElementById("daysWorked").value) || 0;
+    const dailyWage = parseFloat(document.getElementById("dailyWage").value) || 0;
+    const otHours = parseFloat(document.getElementById("otHours").value) || 0;
+    const otRate = parseFloat(document.getElementById("otRate").value) || 0;
+    let reimbursementAmount = parseFloat(document.getElementById("reimbursementAmount").value) || 0;
 
-            if (name && daysWorked > 0 && dailyWage > 0) {
-                const totalWages = dailyWage * daysWorked;
-                const otPay = otHours * otRate;
-                const totalWithOT = totalWages + otPay;
-                const netPay = totalWithOT - reimbursementAmount;
+    if (name && daysWorked > 0 && dailyWage > 0) {
+        const totalWages = dailyWage * daysWorked;
+        const otPay = otHours * otRate;
+        const totalWithOT = totalWages + otPay;
+        const netPay = totalWithOT - reimbursementAmount;
 
-                // แสดงผลลัพธ์
-                document.getElementById("totalWages").textContent = `฿${totalWages.toLocaleString()}`;
-                document.getElementById("otPay").textContent = `฿${otPay.toLocaleString()}`;
-                document.getElementById("totalWithOT").textContent = `฿${totalWithOT.toLocaleString()}`;
-                document.getElementById("reimbursementAmountResult").textContent = `฿${reimbursementAmount.toLocaleString()}`;
-                document.getElementById("netPay").textContent = `฿${netPay.toLocaleString()}`;
+        // แสดงผลลัพธ์
+        document.getElementById("totalWages").textContent = `฿${totalWages.toLocaleString()}`;
+        document.getElementById("otPay").textContent = `฿${otPay.toLocaleString()}`;
+        document.getElementById("totalWithOT").textContent = `฿${totalWithOT.toLocaleString()}`;
+        document.getElementById("reimbursementAmountResult").textContent = `฿${reimbursementAmount.toLocaleString()}`;
+        document.getElementById("netPay").textContent = `฿${netPay.toLocaleString()}`;
 
-                document.getElementById("resultPanel").classList.remove("hidden");
+        document.getElementById("resultPanel").classList.remove("hidden");
 
-                // แสดงรายละเอียดการเบิกเงิน (ถ้ามี)
-                displayWithdrawalDetails();
+        // แสดงรายละเอียดการเบิกเงิน (ถ้ามี)
+        displayWithdrawalDetails();
 
-                // ส่งข้อมูลไปบันทึกในฐานข้อมูล
-                const calculationData = {
-                    employee_name: name,
-                    days_worked: daysWorked,
-                    ot_hours: otHours,
-                    daily_wage: dailyWage,
-                    ot_wage: otPay,
-                    total_wage_ot: totalWithOT,
-                    reimbursement: reimbursementAmount,
-                    remark: "", // Add empty string as default or remove this line
-                    net_pay: netPay
-                };
+        // ส่งข้อมูลไปบันทึกในฐานข้อมูล
+        const calculationData = {
+            employee_name: name,
+            days_worked: daysWorked,
+            ot_hours: otHours,
+            daily_wage: dailyWage,
+            ot_wage: otPay,
+            total_wage_ot: totalWithOT,
+            reimbursement: reimbursementAmount,
+            remark: "", // Add empty string as default or remove this line
+            net_pay: netPay
+        };
 
-                saveCalculation(calculationData);
-            } else {
-                alert("กรุณากรอกข้อมูลให้ครบถ้วน");
-            }
-        }
+        saveCalculation(calculationData);
+    } else {
+        alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+    }
+}
 
         function displayWithdrawalDetails() {
             const detailsList = document.getElementById("withdrawalDetailsList");
@@ -253,69 +277,78 @@
         }
 
         async function showReimbursementHistory() {
-            const name = document.getElementById("name").value.trim();
-            const startDate = document.getElementById("startDate").value;
-            const endDate = document.getElementById("endDate").value;
+    const name = document.getElementById("name").value.trim();
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
 
-            if (!name) {
-                alert("กรุณากรอกชื่อพนักงานก่อนดูประวัติการเบิก");
-                return;
-            }
+    if (!name) {
+        alert("กรุณากรอกชื่อพนักงานก่อนดูประวัติการเบิก");
+        return;
+    }
 
-            try {
-                // สร้าง URL และเพิ่มพารามิเตอร์ startDate และ endDate
-                const url = new URL(`https://my-api-fm30.onrender.com/datewithdraws`);
-                url.searchParams.append('name', name);
-                if (startDate) {
-                    url.searchParams.append('startDate', startDate);
-                }
-                if (endDate) {
-                    url.searchParams.append('endDate', endDate);
-                }
-
-                // เรียก API
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (response.ok) {
-                    // เก็บข้อมูลไว้ใช้แสดงในส่วนผลลัพธ์
-                    withdrawalData = data;
-
-                    const list = document.querySelector('.reimbursement-list');
-                    list.innerHTML = ''; // ล้างรายการก่อนเพิ่มใหม่
-
-                    if (data.length === 0) {
-                        list.innerHTML = '<li>ไม่มีประวัติการเบิก</li>';
-                    } else {
-                        let totalReimbursement = 0;
-                        data.forEach(item => {
-                            totalReimbursement += parseFloat(item.amount);
-
-                            const listItem = document.createElement('li');
-                            listItem.classList.add('reimbursement-item');
-                            listItem.innerHTML = `
-                                <div class="reimbursement-details">
-                                    <div class="reimbursement-date">${new Date(item.date).toLocaleDateString()}</div>
-                                    <div class="reimbursement-amount">฿${parseFloat(item.amount).toLocaleString()}</div>
-                                    <div class="reimbursement-remark">${item.reason}</div>
-                                </div>
-                            `;
-                            list.appendChild(listItem);
-                        });
-
-                        document.getElementById("reimbursementAmount").value = totalReimbursement;
-                    }
-
-                    document.getElementById("reimbursementHistoryPanel").classList.remove("hidden");
-                } else {
-                    alert(data.error || "เกิดข้อผิดพลาดในการโหลดข้อมูล");
-                }
-            } catch (error) {
-                console.error("เกิดข้อผิดพลาด:", error);
-                alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
-            }
+    try {
+        // ดึงข้อมูลการเบิกเงิน
+        const url = new URL(`https://my-api-fm30.onrender.com/datewithdraws`);
+        url.searchParams.append('name', name);
+        if (startDate) {
+            url.searchParams.append('startDate', startDate);
         }
-        
+        if (endDate) {
+            url.searchParams.append('endDate', endDate);
+        }
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (response.ok) {
+            // เก็บข้อมูลการเบิกเงิน
+            withdrawalData = data;
+
+            // แสดงประวัติการเบิกเงิน
+            const list = document.querySelector('.reimbursement-list');
+            list.innerHTML = ''; // ล้างรายการก่อนเพิ่มใหม่
+
+            if (data.length === 0) {
+                list.innerHTML = '<li>ไม่มีประวัติการเบิก</li>';
+            } else {
+                let totalReimbursement = 0;
+                data.forEach(item => {
+                    totalReimbursement += parseFloat(item.amount);
+
+                    const listItem = document.createElement('li');
+                    listItem.classList.add('reimbursement-item');
+                    listItem.innerHTML = `
+                        <div class="reimbursement-details">
+                            <div class="reimbursement-date">${new Date(item.date).toLocaleDateString()}</div>
+                            <div class="reimbursement-amount">฿${parseFloat(item.amount).toLocaleString()}</div>
+                            <div class="reimbursement-remark">${item.reason}</div>
+                        </div>
+                    `;
+                    list.appendChild(listItem);
+                });
+
+                // อัปเดตจำนวนเงินเบิก
+                document.getElementById("reimbursementAmount").value = totalReimbursement;
+            }
+
+            // ดึงข้อมูลการทำงานของพนักงาน (จำนวนวันที่ทำงานและชั่วโมง OT)
+            const workData = await fetchWorkData(name, startDate, endDate);
+            if (workData) {
+                // อัปเดตช่อง "จำนวนวันที่ทำงาน" และ "จำนวนชั่วโมง OT"
+                document.getElementById("daysWorked").value = workData.totalDays || 0;
+                document.getElementById("otHours").value = workData.totalOT || 0;
+            }
+
+            // แสดงแผงประวัติการเบิก
+            document.getElementById("reimbursementHistoryPanel").classList.remove("hidden");
+        } else {
+            alert(data.error || "เกิดข้อผิดพลาดในการโหลดข้อมูล");
+        }
+    } catch (error) {
+        console.error("เกิดข้อผิดพลาด:", error);
+        alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    }
+}
         document.addEventListener("DOMContentLoaded", function () {
             const nameInput = document.getElementById("name");
             let employees = JSON.parse(localStorage.getItem("employeeNames")) || [];
@@ -350,6 +383,28 @@
                     localStorage.setItem("employeeNames", JSON.stringify(employees));
                 }
             });
+
+            const startDateInput = document.getElementById("startDate");
+    const endDateInput = document.getElementById("endDate");
+
+    // เมื่อผู้ใช้เลือกวันที่สิ้นสุด
+    endDateInput.addEventListener("change", async function () {
+        const name = document.getElementById("name").value.trim();
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+
+        if (name && startDate && endDate) {
+            const workData = await fetchWorkData(name, startDate, endDate);
+
+            if (workData) {
+                // อัปเดตช่อง "จำนวนวันที่ทำงาน" และ "จำนวนชั่วโมง OT"
+                document.getElementById("daysWorked").value = workData.totalDays || 0;
+                document.getElementById("otHours").value = workData.totalOT || 0;
+            }
+        } else {
+            alert("กรุณากรอกชื่อพนักงานและเลือกช่วงวันที่ให้ครบถ้วน");
+        }
+    });
         });
         
         // ฟังก์ชันสำหรับการออกจากระบบ
