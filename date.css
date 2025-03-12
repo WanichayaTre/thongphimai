@@ -1,0 +1,450 @@
+/* ปรับแต่งสไตล์ที่สวยงามและทันสมัย */
+* {
+  box-sizing: border-box;
+  font-family: 'Sarabun', 'Prompt', sans-serif;
+  transition: all 0.3s ease;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 30px auto;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 20px;
+  position: relative;
+}
+
+h1 {
+  color: #2c3e50;
+  margin-top: 0;
+  font-weight: 600;
+  font-size: 28px;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+h1:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 4px;
+  background: #4caf50;
+  border-radius: 2px;
+}
+
+.date-selector {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 20px;
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.date-selector label {
+  margin-right: 8px;
+  font-weight: 500;
+  color: #555;
+}
+
+.date-selector select,
+.date-selector input {
+  padding: 10px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  font-size: 14px;
+  background-color: white;
+}
+
+.date-selector select:focus,
+.date-selector input:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+.controls {
+  margin-bottom: 25px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn {
+  padding: 10px 18px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn:hover {
+  background: #e8e8e8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: #4caf50;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #43a047;
+}
+
+/* Tab Styles */
+.tabs {
+  display: flex;
+  border-bottom: none;
+  margin-bottom: 25px;
+  gap: 5px;
+}
+
+.tab {
+  padding: 12px 20px;
+  cursor: pointer;
+  background: #f8f8f8;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  position: relative;
+  top: 1px;
+  font-weight: 500;
+  color: #666;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.tab:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.tab.active {
+  background: white;
+  color: #4caf50;
+  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.05);
+  border-bottom: 3px solid #4caf50;
+}
+
+.tab-content {
+  display: none;
+  background: white;
+  padding: 20px;
+  border-radius: 0 8px 8px 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Table Styles */
+.table-container {
+  margin-bottom: 35px;
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+}
+
+.attendance-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.attendance-table th,
+.attendance-table td {
+  border: 1px solid #eaeaea;
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.attendance-table th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+  color: #444;
+  position: sticky;
+  top: 0;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.03);
+}
+
+.attendance-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.attendance-row,
+.ot-row {
+  border-bottom: 1px solid #eee;
+}
+
+.attendance-input,
+.ot-input,
+.absence-input {
+  width: 100%;
+  max-width: 45px;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+  padding: 6px 4px;
+  border-radius: 4px;
+  transition: border 0.2s;
+}
+
+.attendance-input:focus,
+.ot-input:focus,
+.absence-input:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+.absence-input {
+  max-width: 120px;
+}
+
+.weekend {
+  background-color: #fff8e6;
+}
+
+.weekend th,
+.weekend td {
+  color: #d1761c;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 10% auto;
+  padding: 30px;
+  border: none;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(0);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.close {
+  color: #999;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close:hover {
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+/* Status indicators */
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.status-present {
+  background-color: #4caf50;
+}
+
+.status-absent {
+  background-color: #f44336;
+}
+
+.status-late {
+  background-color: #ff9800;
+}
+
+/* Responsive design */
+@media screen and (max-width: 768px) {
+  .container {
+    padding: 20px;
+    margin: 15px;
+  }
+  
+  .date-selector {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .date-selector > div {
+    width: 100%;
+  }
+  
+  .tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+    padding-bottom: 5px;
+  }
+  
+  .tab {
+    flex: 0 0 auto;
+  }
+}
+.back-button {
+ 
+  top: 20px;
+  left: 20px;
+  background-color: #8FD14F; /* สีเขียวอ่อน */
+  color: #333; /* สีตัวอักษร */
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #7AB540; /* สีเขียวที่เข้มขึ้นเมื่อโฮเวอร์ */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ไอคอนลูกศร */
+.back-button:before {
+  content: "←";
+  margin-right: 8px;
+  font-size: 18px;
+}
+@media print {
+  .controls,
+  .tabs,
+  header,
+  .modal,
+  button {
+    display: none !important;
+  }
+
+  .container {
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .tab-content {
+    display: none !important;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .tab-content.print-active {
+    display: block !important;
+  }
+
+  body {
+    padding: 0;
+    background: white;
+  }
+
+  .table-container {
+    box-shadow: none;
+  }
+
+  .attendance-table {
+    border: 1px solid #ddd;
+  }
+
+  input {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  td,
+  th {
+    font-size: 12px !important;
+    padding: 5px !important;
+  }
+  
+  
+}
