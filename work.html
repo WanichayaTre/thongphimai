@@ -22,7 +22,6 @@
                 <li><a href="money.html"><i class="fas fa-save"></i> บันทึกเงินเบิก</a></li>
                 <li><a href="history.html"><i class="fas fa-history"></i> ประวัติ</a></li>
                 <li><a href="date.html"><i class="fas fa-calendar-check"></i> ลงเวลาทำงาน</a></li>
-                <li class="logout-item"><a href="index.html" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a></li>
             </ul>
         </div>
 
@@ -31,9 +30,6 @@
             <div class="top-bar">
                 <div class="page-title">
                     <h1>คำนวณค่าแรง</h1>
-                </div>
-                <div class="user-actions">
-                    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</button>
                 </div>
             </div>
 
@@ -406,19 +402,7 @@
         }
     });
         });
-        
-        // ฟังก์ชันสำหรับการออกจากระบบ
-        function logout() {
-            // ล้าง session หรือ local storage ที่ใช้เก็บข้อมูลเข้าสู่ระบบ (ถ้ามี)
-            localStorage.removeItem("userToken");
-            localStorage.removeItem("userData");
-            
-            // แจ้งเตือนผู้ใช้
-            alert("ออกจากระบบเรียบร้อยแล้ว");
-            
-            // นำไปยังหน้า login
-            window.location.href = "index.html";
-        }
+    
     </script>
 </body>
 
