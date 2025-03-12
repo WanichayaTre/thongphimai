@@ -568,20 +568,21 @@
                     const attInput = document.querySelector(`.attendance-input[data-employee-id="${employee.id}"][data-day="${day}"]`);
                     const otInput = document.querySelector(`.ot-input[data-employee-id="${employee.id}"][data-day="${day}"]`);
 
-                    if (attInput && attInput.value === '1') {
-                        totalDays++;
-                    }
+                    if (attInput && attInput.value) {
+                // แก้ไขจาก if (attInput && attInput.value === '1') เป็นรับค่าทศนิยมได้
+                totalDays += parseFloat(attInput.value) || 0;
+            }
 
-                    if (otInput && otInput.value) {
-                        totalOT += parseInt(otInput.value) || 0;
-                    }
+            if (otInput && otInput.value) {
+                totalOT += parseFloat(otInput.value) || 0; // ใช้ parseFloat แทน parseInt
+            }
                 }
 
                 const totalDaysValue = document.querySelector(`.total-days[data-week="${weekNum}"][data-employee-id="${employee.id}"] .total-days-value`);
                 const totalOTValue = document.querySelector(`.total-ot[data-week="${weekNum}"][data-employee-id="${employee.id}"] .total-ot-value`);
 
-                if (totalDaysValue) totalDaysValue.textContent = totalDays;
-                if (totalOTValue) totalOTValue.textContent = totalOT;
+                if (totalDaysValue) totalDaysValue.textContent = totalDays.toFixed(1);
+        if (totalOTValue) totalOTValue.textContent = totalOT.toFixed(1); // แสดงทศนิยม 1 ตำแหน่ง
             });
         }
 
@@ -596,19 +597,19 @@
                     const totalOTValue = document.querySelector(`.total-ot[data-week="${weekNum}"][data-employee-id="${employee.id}"] .total-ot-value`);
 
                     if (totalDaysValue && totalDaysValue.textContent) {
-                        totalDays += parseInt(totalDaysValue.textContent) || 0;
-                    }
+                totalDays += parseFloat(totalDaysValue.textContent) || 0; // เปลี่ยนจาก parseInt เป็น parseFloat
+            }
 
-                    if (totalOTValue && totalOTValue.textContent) {
-                        totalOT += parseInt(totalOTValue.textContent) || 0;
-                    }
+            if (totalOTValue && totalOTValue.textContent) {
+                totalOT += parseFloat(totalOTValue.textContent) || 0; // ใช้ parseFloat แทน parseInt
+            }
                 }
 
                 const monthTotalDaysValue = document.querySelector(`.month-total-days[data-employee-id="${employee.id}"] .month-total-days-value`);
                 const monthTotalOTValue = document.querySelector(`.month-total-ot[data-employee-id="${employee.id}"] .month-total-ot-value`);
 
-                if (monthTotalDaysValue) monthTotalDaysValue.textContent = totalDays;
-                if (monthTotalOTValue) monthTotalOTValue.textContent = totalOT;
+                if (monthTotalDaysValue) monthTotalDaysValue.textContent = totalDays.toFixed(1);
+        if (monthTotalOTValue) monthTotalOTValue.textContent = totalOT.toFixed(1);
             });
         }
 
@@ -882,8 +883,8 @@
                         const totalOTValue = document.querySelector(`.total-ot[data-week="${week}"][data-employee-id="${employee.id}"] .total-ot-value`);
                         const noteInput = document.querySelector(`.absence-input[data-week="${week}"][data-employee-id="${employee.id}"]`);
 
-                        const totalDays = parseInt(totalDaysValue ? totalDaysValue.textContent : 0) || 0;
-                        const totalOT = parseInt(totalOTValue ? totalOTValue.textContent : 0) || 0;
+                        const totalDays = parseFloat(totalDaysValue ? totalDaysValue.textContent : 0) || 0;
+                        const totalOT = parseFloat(totalOTValue ? totalOTValue.textContent : 0) || 0;
                         const note = noteInput ? noteInput.value : '';
 
                         console.log("Sending data for employee:", employee.id, "Month:", currentMonth, "Year:", currentYear);
