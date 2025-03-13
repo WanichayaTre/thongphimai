@@ -248,7 +248,7 @@
         // Updated saveAttendance function
         async function saveAttendance(employeeId, month, year, week, totalDays, totalOT, note) {
             try {
-                const response = await fetch('http://localhost:3001/api/save-attendance', {
+                const response = await fetch('https://my-api-fm30.onrender.com/api/save-attendance', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -280,7 +280,7 @@
         // Add a new function to save daily attendance data
         async function saveDailyAttendance(employeeId, month, year, day, attendance, ot) {
             try {
-                const response = await fetch('http://localhost:3001/api/save-daily-attendance', {
+                const response = await fetch('https://my-api-fm30.onrender.com/api/save-daily-attendance', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -313,7 +313,7 @@
         // Updated fetchMonthlySummary function
         async function fetchMonthlySummary(employeeId, month, year) {
             try {
-                const response = await fetch(`http://localhost:3001/api/monthly-summary/${employeeId}/${month}/${year}`);
+                const response = await fetch(`https://my-api-fm30.onrender.com/api/monthly-summary/${employeeId}/${month}/${year}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
