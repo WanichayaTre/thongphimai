@@ -34,6 +34,14 @@
                 <label for="year">ปี:</label>
                 <input type="number" id="year" min="2023" max="2100" value="2025">
                 <button id="btn-update-date" class="btn">แสดงข้อมูล</button>
+                <!-- ฟอร์มค้นหาชื่อพนักงาน -->
+                <div class="search-employee">
+                    <label for="employee-search">ค้นหาชื่อพนักงาน:</label>
+                    <input type="text" id="employee-search" placeholder="กรอกชื่อพนักงาน">
+                    <button id="btn-search-employee" class="btn-search-employee">ค้นหา</button>
+                </div>
+
+
             </div>
 
         </header>
@@ -245,6 +253,16 @@
             }
         }
 
+        // ฟังก์ชันค้นหาพนักงาน
+function searchEmployee() {
+    const searchQuery = document.getElementById('employee-search').value.toLowerCase(); // คำค้นหาจาก input
+    const filteredEmployees = employees.filter(employee => employee.name.toLowerCase().includes(searchQuery));
+
+    // เรียกฟังก์ชันเพื่อรีเฟรชตารางด้วยข้อมูลที่กรองแล้ว
+    renderTables(filteredEmployees);
+}
+
+
         // Updated saveAttendance function
         async function saveAttendance(employeeId, month, year, week, totalDays, totalOT, note) {
             try {
@@ -362,22 +380,27 @@
             week4Title.textContent = `สัปดาห์ที่ 4 (วันที่ 22-${daysInMonth})`;
         }
 
-        function renderTables() {
-            updateWeek4Table();
+        function renderTables(filteredEmployees = employees) {
+    try {
+        // ดึงข้อมูลพนักงานจาก API ก่อน
+        updateWeek4Table();
 
-            // สร้างตารางสำหรับสัปดาห์ที่ 1-3
-            for (let week = 1; week <= 3; week++) {
-                renderWeekTable(week, (week - 1) * 7 + 1, week * 7);
-            }
-
-            // สร้างตารางสำหรับสัปดาห์ที่ 4 (วันที่ 22 ถึงสิ้นเดือน)
-            const daysInMonth = getDaysInMonth(currentMonth, currentYear);
-            renderWeekTable(4, 22, daysInMonth);
-
-            renderSummaryTable();
-            addCalculationListeners();
-            populateAttendanceData();
+        // สร้างตารางสำหรับสัปดาห์ที่ 1-3
+        for (let week = 1; week <= 3; week++) {
+            renderWeekTable(week, (week - 1) * 7 + 1, week * 7, filteredEmployees);
         }
+
+        // สร้างตารางสำหรับสัปดาห์ที่ 4 (วันที่ 22 ถึงสิ้นเดือน)
+        const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+        renderWeekTable(4, 22, daysInMonth, filteredEmployees);
+
+        renderSummaryTable(filteredEmployees);
+        addCalculationListeners();
+        populateAttendanceData();
+    } catch (error) {
+        console.error("Error rendering tables:", error);
+    }
+}
 
         function renderWeekTable(weekNum, startDay, endDay, employeesData) {
             const tableBody = document.getElementById(`week${weekNum}-body`);
@@ -770,6 +793,11 @@
                 this.classList.toggle('active', editMode);
             });
 
+            // เพิ่ม event listener ให้ปุ่มค้นหาพนักงาน
+            document.getElementById('btn-search-employee').addEventListener('click', function () {
+                searchEmployee();
+            });
+
             // ปุ่มลบพนักงาน
             document.getElementById('btn-delete').addEventListener('click', function () {
                 console.log('ปุ่มลบถูกคลิก');
@@ -1009,7 +1037,7 @@
                     const daysInMonth = getDaysInMonth(currentMonth, currentYear);
                     renderWeekTable(4, 22, daysInMonth, employees);
 
-                    renderSummaryTable(employees);
+                    renderSummaryTable();
                     addCalculationListeners();
                     populateAttendanceData();
                 } catch (error) {
@@ -1168,7 +1196,7 @@
         });
         document.getElementById('backToDashboard').addEventListener('click', function () {
             // เปลี่ยน URL ด้านล่างนี้ให้ตรงกับ URL ของหน้า dashboard ของคุณ
-            window.location.href = 'work.html';
+            window.location.href = 'index.html';
         });
 
     </script>
