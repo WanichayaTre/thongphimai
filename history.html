@@ -35,7 +35,7 @@
             <div class="bg-gradient-to-r from-blue-600 to-blue-800 p-6">
                 <div class="flex items-center justify-between">
                     <button class="text-white hover:bg-blue-700 transition-colors duration-300 px-4 py-2 rounded">
-                        <a href="index.html" class="flex items-center">
+                        <a href="work.html" class="flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
                                 fill="currentColor">
                                 <path fill-rule="evenodd"
@@ -847,20 +847,22 @@
 
         // Modify the fetchWageHistory function to include an edit button and make note fields readonly by default
         function fetchWageHistory() {
-            fetch("https://my-api-fm30.onrender.com/api/wage")
-                .then(response => response.json())
-                .then(data => {
-                    const tableBody = document.querySelector("#wageTable tbody");
-                    tableBody.innerHTML = "";
-                    data.forEach(row => {
-                        const reason = row.withdrawal_reason || ""; // ถ้าไม่มี reason ให้ใช้ค่าว่าง
+    fetch("https://my-api-fm30.onrender.com/api/wage")
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.querySelector("#wageTable tbody");
+            tableBody.innerHTML = ""; // เคลียร์ข้อมูลเก่า
 
-                        const tr = document.createElement("tr");
-                        tr.setAttribute("data-id", row.id);
-                        tr.innerHTML = `
+            data.forEach(row => {
+                const reason = row.remark || ""; // ถ้า remark เป็น null ให้ใช้ "ไม่ระบุ"
+                const calculationDate = row.calculation_date ? row.calculation_date.split("T")[0] : "ไม่ระบุ"; // ถ้า calculation_date เป็น null ให้ใช้ "ไม่ระบุ"
+
+                const tr = document.createElement("tr");
+                tr.setAttribute("data-id", row.id);
+                tr.innerHTML = `
                     <td class="p-2 border"><input type="checkbox" class="row-checkbox"></td>
                     <td class="p-2 border">${row.employee_name}</td>
-                    <td class="p-2 border">${row.calculation_date.split("T")[0]}</td>
+                    <td class="p-2 border">${calculationDate}</td>
                     <td class="p-2 border">${row.days_worked}</td>
                     <td class="p-2 border">${row.daily_wage}</td>
                     <td class="p-2 border">${row.ot_hours}</td>
@@ -875,38 +877,14 @@
                     </td>
                     <td class="p-2 border">${row.net_pay}</td>
                 `;
-                        tableBody.appendChild(tr);
-                    });
-
-                    // เพิ่ม event listener สำหรับช่องหมายเหตุ
-                    addNoteInputEventListeners();
-                })
-                .catch(error => {
-                    console.error("Error fetching wage history:", error);
-                    alert("เกิดข้อผิดพลาดในการดึงข้อมูลประวัติค่าจ้าง");
-                });
-        }
-
-        // ฟังก์ชั่นสลับสถานะการแก้ไขหมายเหตุ
-        function toggleNoteEdit(button, rowId) {
-            const noteInput = button.previousElementSibling;
-
-            if (noteInput.hasAttribute('readonly')) {
-                // เปลี่ยนเป็นโหมดแก้ไข
-                noteInput.removeAttribute('readonly');
-                noteInput.focus();
-                button.textContent = 'บันทึก';
-                button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                button.classList.add('bg-green-500', 'hover:bg-green-600');
-            } else {
-                // บันทึกหมายเหตุและเปลี่ยนกลับเป็นโหมดอ่านอย่างเดียว
-                updateNote(rowId, noteInput.value);
-                noteInput.setAttribute('readonly', 'readonly');
-                button.textContent = 'แก้ไข';
-                button.classList.remove('bg-green-500', 'hover:bg-green-600');
-                button.classList.add('bg-blue-500', 'hover:bg-blue-600');
-            }
-        }
+                tableBody.appendChild(tr);
+            });
+        })
+        .catch(error => {
+            console.error("Error fetching wage history:", error);
+            alert("เกิดข้อผิดพลาดในการดึงข้อมูลประวัติค่าจ้าง");
+        });
+}
 
 
         // ฟังก์ชั่นสลับสถานะการแก้ไขหมายเหตุ
@@ -930,7 +908,28 @@
             }
         }
 
-        // Function to handle note updates
+
+        // ฟังก์ชั่นสลับสถานะการแก้ไขหมายเหตุ
+        function toggleNoteEdit(button, rowId) {
+            const noteInput = button.previousElementSibling;
+
+            if (noteInput.hasAttribute('readonly')) {
+                // เปลี่ยนเป็นโหมดแก้ไข
+                noteInput.removeAttribute('readonly');
+                noteInput.focus();
+                button.textContent = 'บันทึก';
+                button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                button.classList.add('bg-green-500', 'hover:bg-green-600');
+            } else {
+                // บันทึกหมายเหตุและเปลี่ยนกลับเป็นโหมดอ่านอย่างเดียว
+                updateNote(rowId, noteInput.value);
+                noteInput.setAttribute('readonly', 'readonly');
+                button.textContent = 'แก้ไข';
+                button.classList.remove('bg-green-500', 'hover:bg-green-600');
+                button.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            }
+        }
+
         // Function to handle note updates
         function updateNote(rowId, newNote) {
             fetch("https://my-api-fm30.onrender.com/api/wage/note", {
