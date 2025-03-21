@@ -219,6 +219,7 @@
     </div>
 
     <script>
+
         /// ข้อมูลหลักและตัวแปร
         let employees = [];
         let attendanceData = {};
@@ -230,10 +231,16 @@
 
         // ฟังก์ชันจัดการ LocalStorage
         function saveToLocalStorage() {
-            localStorage.setItem('employees', JSON.stringify(employees));
-            localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
-            localStorage.setItem('lastMonth', currentMonth);
-            localStorage.setItem('lastYear', currentYear);
+            const items = {
+                'employees': employees,
+                'attendanceData': attendanceData,
+                'lastMonth': currentMonth,
+                'lastYear': currentYear
+            };
+
+            for (const [key, value] of Object.entries(items)) {
+                localStorage.setItem(key, JSON.stringify(value));
+            }
         }
 
         function loadFromLocalStorage() {
@@ -245,6 +252,7 @@
 
             const lastMonth = localStorage.getItem('lastMonth');
             const lastYear = localStorage.getItem('lastYear');
+
             if (lastMonth && lastYear) {
                 currentMonth = parseInt(lastMonth);
                 currentYear = parseInt(lastYear);
@@ -253,79 +261,41 @@
             }
         }
 
-        // ฟังก์ชันค้นหาพนักงาน
-function searchEmployee() {
-    const searchQuery = document.getElementById('employee-search').value.toLowerCase(); // คำค้นหาจาก input
-    const filteredEmployees = employees.filter(employee => employee.name.toLowerCase().includes(searchQuery));
+        function searchEmployee() {
+            const searchQuery = document.getElementById('employee-search').value.toLowerCase();
+            renderTables(employees.filter(emp => emp.name.toLowerCase().includes(searchQuery)));
+        }
 
-    // เรียกฟังก์ชันเพื่อรีเฟรชตารางด้วยข้อมูลที่กรองแล้ว
-    renderTables(filteredEmployees);
-}
-
-
-        // Updated saveAttendance function
         async function saveAttendance(employeeId, month, year, week, totalDays, totalOT, note) {
-            try {
-                const response = await fetch('https://my-api-fm30.onrender.com/api/save-attendance', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        employeeId,
-                        month,
-                        year,
-                        week,
-                        totalDays,
-                        totalOT,
-                        note,
-                    }),
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                console.log("Saved weekly attendance:", result);
-                return result;
-            } catch (error) {
-                console.error("Error saving attendance:", error);
-                throw error;
-            }
+            return await sendRequest('save-attendance', {
+                employeeId, month, year, week, totalDays, totalOT, note
+            });
         }
 
-        // Add a new function to save daily attendance data
         async function saveDailyAttendance(employeeId, month, year, day, attendance, ot) {
+            return await sendRequest('save-daily-attendance', {
+                employeeId, month, year, day, attendance, ot
+            });
+        }
+
+        async function sendRequest(endpoint, data) {
             try {
-                const response = await fetch('https://my-api-fm30.onrender.com/api/save-daily-attendance', {
+                const response = await fetch(`https://my-api-fm30.onrender.com/api/${endpoint}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        employeeId,
-                        month,
-                        year,
-                        day,
-                        attendance,
-                        ot,
-                    }),
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
                 const result = await response.json();
-                console.log("Saved daily attendance:", result);
+                console.log(`Saved ${endpoint}:`, result);
                 return result;
             } catch (error) {
-                console.error("Error saving daily attendance:", error);
+                console.error(`Error saving ${endpoint}:`, error);
                 throw error;
             }
         }
-
 
 
         // Updated fetchMonthlySummary function
@@ -381,26 +351,26 @@ function searchEmployee() {
         }
 
         function renderTables(filteredEmployees = employees) {
-    try {
-        // ดึงข้อมูลพนักงานจาก API ก่อน
-        updateWeek4Table();
+            try {
+                // ดึงข้อมูลพนักงานจาก API ก่อน
+                updateWeek4Table();
 
-        // สร้างตารางสำหรับสัปดาห์ที่ 1-3
-        for (let week = 1; week <= 3; week++) {
-            renderWeekTable(week, (week - 1) * 7 + 1, week * 7, filteredEmployees);
+                // สร้างตารางสำหรับสัปดาห์ที่ 1-3
+                for (let week = 1; week <= 3; week++) {
+                    renderWeekTable(week, (week - 1) * 7 + 1, week * 7, filteredEmployees);
+                }
+
+                // สร้างตารางสำหรับสัปดาห์ที่ 4 (วันที่ 22 ถึงสิ้นเดือน)
+                const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+                renderWeekTable(4, 22, daysInMonth, filteredEmployees);
+
+                renderSummaryTable(filteredEmployees);
+                addCalculationListeners();
+                populateAttendanceData();
+            } catch (error) {
+                console.error("Error rendering tables:", error);
+            }
         }
-
-        // สร้างตารางสำหรับสัปดาห์ที่ 4 (วันที่ 22 ถึงสิ้นเดือน)
-        const daysInMonth = getDaysInMonth(currentMonth, currentYear);
-        renderWeekTable(4, 22, daysInMonth, filteredEmployees);
-
-        renderSummaryTable(filteredEmployees);
-        addCalculationListeners();
-        populateAttendanceData();
-    } catch (error) {
-        console.error("Error rendering tables:", error);
-    }
-}
 
         function renderWeekTable(weekNum, startDay, endDay, employeesData) {
             const tableBody = document.getElementById(`week${weekNum}-body`);
@@ -1117,60 +1087,219 @@ function searchEmployee() {
             }
 
 
-            // ปุ่มพิมพ์
+            // ปุ่มพิมพ์ - แก้ไขให้สามารถเลือกพนักงานก่อนพิมพ์ได้
             document.getElementById('btn-print').addEventListener('click', function () {
-                const printWindow = window.open('', '_blank');
-                const activeTab = currentTab;
-                const activeTabContent = document.getElementById(`${activeTab}-content`);
-                const activeTable = activeTabContent.querySelector('table');
+                // สร้าง modal สำหรับเลือกพนักงาน
+                const modal = document.createElement('div');
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                modal.style.display = 'flex';
+                modal.style.justifyContent = 'center';
+                modal.style.alignItems = 'center';
+                modal.style.zIndex = '1000';
 
-                let tabTitle = "";
-                if (activeTab === 'week1') tabTitle = "สัปดาห์ที่ 1";
-                else if (activeTab === 'week2') tabTitle = "สัปดาห์ที่ 2";
-                else if (activeTab === 'week3') tabTitle = "สัปดาห์ที่ 3";
-                else if (activeTab === 'week4') tabTitle = "สัปดาห์ที่ 4";
-                else if (activeTab === 'week5') tabTitle = "สัปดาห์ที่ 5";
-                else if (activeTab === 'summary') tabTitle = "สรุปประจำเดือน";
+                // สร้างกล่องเนื้อหา
+                const modalContent = document.createElement('div');
+                modalContent.style.backgroundColor = 'white';
+                modalContent.style.padding = '20px';
+                modalContent.style.borderRadius = '5px';
+                modalContent.style.width = '350px';
+                modalContent.style.maxHeight = '80vh';
+                modalContent.style.overflowY = 'auto';
 
-                const tableCopy = activeTable.cloneNode(true);
-                tableCopy.querySelectorAll('input').forEach(input => {
-                    const span = document.createElement('span');
-                    span.textContent = input.value || '';
-                    input.parentNode.replaceChild(span, input);
+                // หัวข้อ
+                const title = document.createElement('h3');
+                title.textContent = 'เลือกพนักงานที่ต้องการพิมพ์';
+                modalContent.appendChild(title);
+
+                // สร้างปุ่มเลือกทั้งหมด/ยกเลิกทั้งหมด
+                const selectAllContainer = document.createElement('div');
+                selectAllContainer.style.marginBottom = '10px';
+
+                const selectAllCheckbox = document.createElement('input');
+                selectAllCheckbox.type = 'checkbox';
+                selectAllCheckbox.id = 'select-all-employees';
+                selectAllCheckbox.checked = true;
+
+                const selectAllLabel = document.createElement('label');
+                selectAllLabel.htmlFor = 'select-all-employees';
+                selectAllLabel.textContent = ' เลือกทั้งหมด/ยกเลิกทั้งหมด';
+                selectAllLabel.style.fontWeight = 'bold';
+                selectAllLabel.style.cursor = 'pointer';
+
+                selectAllContainer.appendChild(selectAllCheckbox);
+                selectAllContainer.appendChild(selectAllLabel);
+                modalContent.appendChild(selectAllContainer);
+
+                // เส้นคั่น
+                const divider = document.createElement('hr');
+                divider.style.margin = '10px 0';
+                modalContent.appendChild(divider);
+
+                // สร้างรายการพนักงานพร้อม checkbox
+                const employeeList = document.createElement('div');
+                employeeList.style.marginBottom = '20px';
+
+                // สร้าง checkbox สำหรับแต่ละพนักงาน
+                const employeeCheckboxes = [];
+                employees.forEach(emp => {
+                    const item = document.createElement('div');
+                    item.style.padding = '5px';
+                    item.style.display = 'flex';
+                    item.style.alignItems = 'center';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `emp-${emp.id}`;
+                    checkbox.value = emp.id;
+                    checkbox.checked = true; // เลือกทั้งหมดเป็นค่าเริ่มต้น
+                    checkbox.style.marginRight = '10px';
+                    employeeCheckboxes.push(checkbox);
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `emp-${emp.id}`;
+                    label.textContent = emp.name || 'ไม่มีชื่อ';
+                    label.style.cursor = 'pointer';
+
+                    item.appendChild(checkbox);
+                    item.appendChild(label);
+                    employeeList.appendChild(item);
                 });
 
-                const printContent = `
-      <html>
-      <head>
-        <title>รายงานการลงเวลา ${tabTitle} ประจำเดือน ${currentMonth}/${currentYear}</title>
-        <style>
-          body { font-family: Arial, sans-serif; }
-          table { width: 95%; border-collapse: collapse; margin: 0 auto 20px; }
-          th, td { border: 1px solid #000; padding: 3px; text-align: center; font-size: 12px; }
-          .title { text-align: center; font-size: 16px; margin-bottom: 15px; }
-          .weekend { background-color: #f0f0f0; }
-          @page { size: landscape; margin: 10mm; }
-        </style>
-      </head>
-      <body>
-        <div class="title">รายงานการลงเวลา ${tabTitle} ประจำเดือน ${currentMonth}/${currentYear}</div>
-        ${tableCopy.outerHTML}
-      
-    `;
+                modalContent.appendChild(employeeList);
 
-                printWindow.document.write(printContent);
-                printWindow.document.close();
+                // เพิ่ม event listener สำหรับ "เลือกทั้งหมด/ยกเลิกทั้งหมด"
+                selectAllCheckbox.addEventListener('change', function () {
+                    const isChecked = this.checked;
+                    employeeCheckboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+                });
 
-                printWindow.onload = function () {
-                    printWindow.print();
-                };
-            });
+                // ปุ่มดำเนินการและยกเลิก
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.style.display = 'flex';
+                buttonsContainer.style.justifyContent = 'space-between';
 
-            // อัปเดตเดือน/ปี
-            document.getElementById('btn-update-date').addEventListener('click', function () {
-                currentMonth = parseInt(document.getElementById('month').value);
-                currentYear = parseInt(document.getElementById('year').value);
-                renderTables();
+                const printButton = document.createElement('button');
+                printButton.textContent = 'พิมพ์';
+                printButton.style.padding = '8px 15px';
+                printButton.style.backgroundColor = '#4CAF50';
+                printButton.style.color = 'white';
+                printButton.style.border = 'none';
+                printButton.style.borderRadius = '4px';
+                printButton.style.cursor = 'pointer';
+
+                const cancelButton = document.createElement('button');
+                cancelButton.textContent = 'ยกเลิก';
+                cancelButton.style.padding = '8px 15px';
+                cancelButton.style.backgroundColor = '#f44336';
+                cancelButton.style.color = 'white';
+                cancelButton.style.border = 'none';
+                cancelButton.style.borderRadius = '4px';
+                cancelButton.style.cursor = 'pointer';
+
+                buttonsContainer.appendChild(cancelButton);
+                buttonsContainer.appendChild(printButton);
+                modalContent.appendChild(buttonsContainer);
+
+                // เพิ่ม modal เข้าไปใน body
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+
+                // ผูก event ให้ปุ่มยกเลิก
+                cancelButton.addEventListener('click', function () {
+                    document.body.removeChild(modal);
+                });
+
+                // ผูก event ให้ปุ่มพิมพ์
+                printButton.addEventListener('click', function () {
+                    // รวบรวม ID ของพนักงานที่ถูกเลือก
+                    const selectedEmployeeIds = employeeCheckboxes
+                        .filter(checkbox => checkbox.checked)
+                        .map(checkbox => checkbox.value);
+
+                    if (selectedEmployeeIds.length === 0) {
+                        alert('กรุณาเลือกพนักงานอย่างน้อย 1 คน');
+                        return;
+                    }
+
+                    // ปิด modal
+                    document.body.removeChild(modal);
+
+                    // เริ่มกระบวนการพิมพ์
+                    const printWindow = window.open('', '_blank');
+                    const activeTab = currentTab;
+                    const activeTabContent = document.getElementById(`${activeTab}-content`);
+                    const activeTable = activeTabContent.querySelector('table');
+
+                    let tabTitle = "";
+                    if (activeTab === 'week1') tabTitle = "สัปดาห์ที่ 1";
+                    else if (activeTab === 'week2') tabTitle = "สัปดาห์ที่ 2";
+                    else if (activeTab === 'week3') tabTitle = "สัปดาห์ที่ 3";
+                    else if (activeTab === 'week4') tabTitle = "สัปดาห์ที่ 4";
+                    else if (activeTab === 'summary') tabTitle = "สรุปประจำเดือน";
+
+                    // คัดลอกตารางและกรองเฉพาะพนักงานที่เลือก
+                    const tableCopy = activeTable.cloneNode(true);
+
+                    // กรองแถวที่ไม่ได้เลือก
+                    const rows = tableCopy.querySelectorAll('tbody tr');
+                    for (let i = rows.length - 1; i >= 0; i--) {
+                        const row = rows[i];
+                        const employeeId = row.dataset.employeeId;
+
+                        // ถ้าเป็นแถว OT และแถวก่อนหน้าถูกลบ ให้ลบแถวนี้ด้วย
+                        if (row.classList.contains('ot-row') && i > 0 && !rows[i - 1].parentNode) {
+                            row.parentNode.removeChild(row);
+                            continue;
+                        }
+
+                        // ถ้าไม่ได้เลือกพนักงานนี้ และไม่ใช่แถว OT ให้ลบแถวนี้และแถว OT ที่เกี่ยวข้อง
+                        if (employeeId && !selectedEmployeeIds.includes(employeeId) && !row.classList.contains('ot-row')) {
+                            if (i < rows.length - 1 && rows[i + 1].classList.contains('ot-row')) {
+                                rows[i + 1].parentNode.removeChild(rows[i + 1]);
+                            }
+                            row.parentNode.removeChild(row);
+                        }
+                    }
+
+                    // แปลง input เป็น text
+                    tableCopy.querySelectorAll('input').forEach(input => {
+                        const span = document.createElement('span');
+                        span.textContent = input.value || '';
+                        input.parentNode.replaceChild(span, input);
+                    });
+
+                    const printContent = `
+        <html>
+        <head>
+            <title>รายงานการลงเวลา ${tabTitle} ประจำเดือน ${currentMonth}/${currentYear}</title>
+            <style>
+                body { font-family: Arial, sans-serif; }
+                table { width: 95%; border-collapse: collapse; margin: 0 auto 20px; }
+                th, td { border: 1px solid #000; padding: 3px; text-align: center; font-size: 12px; }
+                .title { text-align: center; font-size: 16px; margin-bottom: 15px; }
+                .weekend { background-color: #f0f0f0; }
+                @page { size: landscape; margin: 10mm; }
+            </style>
+        </head>
+        <body>
+            <div class="title">รายงานการลงเวลา ${tabTitle} ประจำเดือน ${currentMonth}/${currentYear}</div>
+            ${tableCopy.outerHTML}
+       `;
+
+                    printWindow.document.write(printContent);
+                    printWindow.document.close();
+
+                    printWindow.onload = function () {
+                        printWindow.print();
+                    };
+                });
             });
             function resetApplication() {
                 // รีเซ็ตข้อมูลทั้งหมด
@@ -1198,6 +1327,9 @@ function searchEmployee() {
             // เปลี่ยน URL ด้านล่างนี้ให้ตรงกับ URL ของหน้า dashboard ของคุณ
             window.location.href = 'index.html';
         });
+
+        //////////////////////////////////////////////////
+       
 
     </script>
 </body>
